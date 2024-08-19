@@ -1,0 +1,22 @@
+remark goes here
+MASS
+
+BOND
+
+ANGLE
+
+DIHE
+c3-cc-ss-cc   1    1.100       180.000           2.000      same as X -c2-ss-X 
+cc-ss-cc-cd   1    1.100       180.000           2.000      same as X -c2-ss-X 
+cc-ss-cc-h4   1    1.100       180.000           2.000      same as X -c2-ss-X 
+nd-cc-ss-cc   1    1.100       180.000           2.000      same as X -c2-ss-X 
+
+IMPROPER
+c3-nd-cc-ss         1.1          180.0         2.0          Using default value
+cc-h4-cd-nd         1.1          180.0         2.0          Using default value
+cd-h4-cc-ss         1.1          180.0         2.0          Using default value
+
+NONBON
+
+
+
