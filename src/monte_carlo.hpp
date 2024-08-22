@@ -382,8 +382,7 @@ std::pair<double, chromosome> ObtainBestIndividual(std::vector<double> fitness, 
     return best_population_this_generation;
 }
 
-std::pair<double, std::vector<double> > MonteCarlo(CoComplex* cocomplex, OpenValence* open_valence, AtomVector& receptor_atoms, AtomVector& ligand_atoms, AtomVector& moiety_atoms,
-                                              std::vector<AtomVector>& all_torsions, int interval, int num_threads){
+std::pair<double, std::vector<double> > MonteCarlo(CoComplex* cocomplex, OpenValence* open_valence, AtomVector& receptor_atoms, AtomVector& ligand_atoms, AtomVector& moiety_atoms, std::vector<AtomVector>& all_torsions, int interval, int num_threads, std::string output_pdb_path, int open_valence_index, DerivativeMoiety* derivative_moiety){
 
     std::cout << "Start Monte Carlo" << std::endl;
     int num_bonds = all_torsions.size();
@@ -479,6 +478,25 @@ std::pair<double, std::vector<double> > MonteCarlo(CoComplex* cocomplex, OpenVal
             }
         }
 
+		//Write out protein and ligand pdb files for the best rotamer of this generation. Example: cmpd_1_receptor_ga_15.pdb cmpd_1_ligand_ga_15.pdb
+		std::string open_atom_name = open_valence->GetOpenValenceAtom()->GetName();
+		std::string moiety_name = (derivative_moiety != NULL) ? derivative_moiety->GetMoietyName() : "anyname";
+		std::stringstream output_pdb_name;
+		output_pdb_name << output_pdb_path << "/complex" << open_valence_index << "-" << open_atom_name << "-" << moiety_name << "-" << "ga-" << num_gens;
+		output_pdb_name << ".pdb";
+		PdbFileSpace::PdbFile* best_pdb = cocomplex->GetCoComplexAssembly()->BuildPdbFileStructureFromAssembly();
+    	best_pdb->Write(output_pdb_name.str());
+    	std::cout << "Wrote pdb file " << output_pdb_name.str() << std::endl;
+
+		//Next: call open valence object to write out derivatized receptor&ligand pdb file
+		chromosome& best_torsions = best_population_this_generation.second;
+		/*for (unsigned int x = 0; x < all_torsions.size(); x++){
+            std::cout << "This GA iteration highest torisons " << best_torsions[x] << std::endl;
+            SetDihedral(all_torsions[x][0], all_torsions[x][1], all_torsions[x][2], all_torsions[x][3], best_torsions[x], 0);
+            std::cout << "But actually this torsions is: " << GetDihedral(all_torsions[x][0], all_torsions[x][1], all_torsions[x][2], all_torsions[x][3], 0) << std::endl;
+        }*/
+		//cocomplex->WriteDerivatizedLigandOffFile();
+    	cocomplex->WriteDerivatizedLigandAndReceptorPdbFile(output_pdb_path, true, num_gens + 1);
         //std::cout << num_gens + 1 << " " << population_size * (num_gens + 1)  << " " << best_population.first << std::endl;
 
         //Get best and worse fitness sum for all couples within the population

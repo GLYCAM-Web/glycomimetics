@@ -97,7 +97,7 @@ public:
 
     //FUNCTIONS
     //void UpdateLigandAtoms();
-    void WriteDerivatizedLigandAndReceptorPdbFile(std::string output_path);
+    void WriteDerivatizedLigandAndReceptorPdbFile(std::string output_path, bool ga, int num_iteration);
     void WriteDerivatizedLigandOffFile();
     void RestoreReceptorPositions();
     void RestoreLigandPositions();
@@ -494,7 +494,7 @@ CoComplex::CoComplex(std::string file_path, std::string gems_home, std::string o
     this->receptor_assembly_ = new MolecularModeling::Assembly();
     this->ligand_assembly_ = new MolecularModeling::Assembly();
     //For now find receptor by check if protein, other atoms are all considered ligand. 
-    std::vector<std::string> other_receptor_residue_names = {"CA","HOH", "WAT"};
+    std::vector<std::string> other_receptor_residue_names = {"CA","HOH", "WAT", "ACE", "NME"};
     std::vector<MolecularModeling::Residue*> assembly_residues = this->cocomplex_assembly_->GetResidues();
     for (unsigned int i = 0; i < assembly_residues.size(); i++){
 	std::string resname = assembly_residues[i]->GetName();
@@ -562,7 +562,7 @@ CoComplex::CoComplex(std::string file_path, std::string gems_home, std::string o
 
 }
 
-void CoComplex::WriteDerivatizedLigandAndReceptorPdbFile(std::string output_path){
+void CoComplex::WriteDerivatizedLigandAndReceptorPdbFile(std::string output_path, bool ga, int num_ga_iteration){
 
 	//Rename all ligand residues to "LIG" and set them into a single residue number. So they appear to be a single residue
 
@@ -604,9 +604,17 @@ void CoComplex::WriteDerivatizedLigandAndReceptorPdbFile(std::string output_path
         ligand_assembly_atoms[i]->SetName(new_name.str());
     }
 
-    this->WriteDerivatizedLigandPdb2GlycamLogFile(derivatized_ligand_assembly, pdb_file_name, old_names);
 
     //pdb_file_name.erase(pdb_file_name.size()-1); //Remove last "_"
+    if (ga){
+		std::stringstream ga_ss;
+		ga_ss << "ga_" << num_ga_iteration << "_"; 
+		std::string ga_suffix = ga_ss.str();
+		pdb_file_name += ga_suffix;
+		receptor_pdb_file_name += ga_suffix;
+	}
+
+    this->WriteDerivatizedLigandPdb2GlycamLogFile(derivatized_ligand_assembly, pdb_file_name, old_names);
     pdb_file_name+="ligand.pdb";
     receptor_pdb_file_name+="receptor.pdb";
 
