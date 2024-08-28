@@ -71,6 +71,7 @@ int main(int argc, char* argv[]){
     MolecularModeling::Assembly assemblyA(file_path_str, gmml::InputFileType::PDB); 
     VinaBondByDistanceForPDB(assemblyA, 0);
 
+	AtomVector all_atoms = assemblyA.GetAllAtomsOfAssembly();
 	char* gemshome = std::getenv("GEMSHOME");
 	if (!gemshome){
         std::cout << "GEMSHOME environment variable must be set. Aborting." << std::endl;
@@ -150,10 +151,11 @@ int main(int argc, char* argv[]){
 		std::exit(1);
 	}
 
+	std::cout << "Num avail atoms: " << available_atoms.size() << std::endl;
     for (unsigned int i = 0; i < available_atoms.size(); i++){
         available_atom& atom = available_atoms[i];
 		//std::string residue_index_str_, atom_name_, atom_to_replace_;
-		//std::cout << "Open for derivatization: " << atom.residue_index_str_ << "-" << atom.atom_name_ << "-" << atom.atom_to_replace_ << std::endl;
+		std::cout << "Open for derivatization: " << atom.residue_index_str_ << "-" << atom.atom_name_ << "-" << atom.atom_to_replace_ << std::endl;
 		atom.print_attribute(output_file);
     }
 	output_file.close();

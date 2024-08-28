@@ -199,6 +199,16 @@ bool pdb2glycam_matching(std::string file_path, std::map<MolecularModeling::Atom
     }
     
     gmml::GlycamResidueNamingMap res_map = assemblyA.ExtractResidueGlycamNamingMap(oligos, oligo_id_map, oligo_residue_map);
+
+	/*for (unsigned int i = 0; i < assAatoms.size(); i++){
+        MolecularModeling::Atom* a = assAatoms[i];
+        AtomVector an = a->GetNode()->GetNodeNeighbors();
+        for (unsigned int j = 0; j < an.size(); j++){
+            MolecularModeling::Atom* n = an[j];
+            std::cout << "After Extract naming map " << a->GetResidue()->GetName() << "-" << a->GetName() <<  " " << a << " has neighbor " << n->GetResidue()->GetName() << "-" << n->GetName() << " " << n << std::endl;
+        }
+    }*/
+
     assemblyA.PutAglyconeInNewResidueAndRearrangeGlycanResidues(oligos, oligo_residue_map);
 
     for (std::map<Glycan::Oligosaccharide*, std::vector<MolecularModeling::Residue*> >::iterator mapit = oligo_residue_map.begin(); mapit != oligo_residue_map.end(); mapit++){
@@ -241,6 +251,9 @@ bool pdb2glycam_matching(std::string file_path, std::map<MolecularModeling::Atom
         else{
             std::map<MolecularModeling::Atom*, MolecularModeling::Atom*>& first_match = all_isomorphisms[0];
 
+			std::cout << "=======================" << std::endl;
+			std::cout << "PDB_ATOM -> GLYCAM_ATOM" << std::endl; 
+			std::cout << "=======================" << std::endl;
             for (std::map<MolecularModeling::Atom*, MolecularModeling::Atom*>::iterator mapit = first_match.begin(); mapit != first_match.end(); mapit++){
                 MolecularModeling::Atom* assemblyA_atom = mapit->first;
                 MolecularModeling::Atom* glycam_template_atom = mapit->second;
@@ -249,7 +262,9 @@ bool pdb2glycam_matching(std::string file_path, std::map<MolecularModeling::Atom
 
                 MolecularModeling::Atom* actual_atom = assemblyA_actual_atom_map[assemblyA_atom];
                 actual_template_atom_match[actual_atom] = glycam_template_atom;
+				std::cout << actual_atom->GetResidue()->GetName() << "-" << actual_atom->GetName() << " -> " << glycam_template_atom->GetResidue()->GetName() << "-" << glycam_template_atom->GetName() << std::endl;
             }
+			std::cout << "=======================" << std::endl;
         }
     }
 
