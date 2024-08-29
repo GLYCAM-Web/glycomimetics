@@ -62,7 +62,7 @@ void ReorderAtomsForZMatrix(MolecularModeling::Assembly& assembly){
     for (unsigned int i = 0; i < residues.size(); i++){
         MolecularModeling::Residue* residue = residues[i];
         AtomVector residue_atoms = residue->GetAtoms();
-
+	std::cout << "Residue name: " << residue->GetName() << " Num residue atoms: " << residue_atoms.size() << std::endl;
         MolecularModeling::Atom* atom1 = residue_atoms[0];
         AtomVector visited_atoms;
         TraverseGraphAndReorderAtoms(atom1, residue_reordered_atoms_map, visited_atoms, residue_atoms);
@@ -72,7 +72,6 @@ void ReorderAtomsForZMatrix(MolecularModeling::Assembly& assembly){
         MolecularModeling::Residue* residue = residues[i];
         residue->SetAtoms(residue_reordered_atoms_map[residue]);
     }
-
 }
 
 bool InternalClashesExist(AtomVector& atom_set_1, AtomVector& atom_set_2, int coord_index){
