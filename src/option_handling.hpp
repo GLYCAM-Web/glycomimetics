@@ -92,7 +92,7 @@ bool IsInteger(std::string& str){
 }
 
 void ProcessInputFile(int argc, char* argv[], int& interval, int& max_num_threads, int& num_threads, std::string& cocrystal_pdb_path, std::string& output_pdb_path, std::string& logfile_path, std::vector<open_valence_option>& open_valence_options){
-    std::vector<std::string> required_keywords = {"ComplexPdb", "OpenValence", "Interval", "NumThreads", "OutputPath", "LogFile"};
+    std::vector<std::string> required_keywords = {"ComplexPdb", "OpenValence"};
     std::vector<bool> keywords_present(required_keywords.size(), false);
     std::string input_file_argument = "-f";
 
