@@ -18,7 +18,7 @@ int main(int argc, char* argv[])
     std::string ext = "";
     std::string cocrystal_pdb_path = "";
     std::string moiety_path = "";
-    std::string output_pdb_path = "";
+    std::string output_pdb_path = "output";
     std::string logfile_path = "gridsearch_log.txt";
     std::string requested_combinations;
 
