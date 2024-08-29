@@ -38,7 +38,7 @@ void BuildBondFromMol2(MolecularModeling::Assembly& ligand_pdb, std::vector<std:
 
     for (unsigned int i = 0; i < all_atoms.size(); i++){
         MolecularModeling::Atom* atom = all_atoms[i];
-        //std::cout << " Ligand pdb atom: " << all_atoms[i]->GetName() << std::endl;
+        std::cout << " Ligand pdb atom: " << all_atoms[i]->GetName() << std::endl;
         MolecularModeling::AtomNode* new_node = new MolecularModeling::AtomNode();
 
         new_node->SetAtom(atom);
