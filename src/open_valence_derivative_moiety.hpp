@@ -153,7 +153,7 @@ public:
     typedef std::vector<MolecularModeling::Atom*> AtomVector; 
 
     //CONSTRUCTOR
-    OpenValence(CoComplex* cocomplex, MolecularModeling::Atom* atom, int num_threads, std::string linkage_torsion_atom1, std::string derivatize_type, bool linkage_torsion_rotatable, std::string linkage_torsion_value_str, std::vector<std::string>& explicit_torsion_str, std::vector<std::pair<std::string, std::string> >& explicit_torsion_str_preset, std::string moiety_path, std::string moiety_name_pattern);
+    OpenValence(CoComplex* cocomplex, MolecularModeling::Atom* atom, int num_threads, std::string derivatize_type, bool linkage_torsion_rotatable, std::string linkage_torsion_value_str, std::vector<std::string>& explicit_torsion_str, std::vector<std::pair<std::string, std::string> >& explicit_torsion_str_preset, std::string moiety_path, std::string moiety_name_pattern);
     OpenValence();
 
     //ACCESSORS
@@ -176,7 +176,7 @@ public:
     void SetCoComplex(CoComplex* cocomplex);
 
     //FUNCTIONS
-    void ProfileOpenValenceAtomNeighbors(std::string& linkage_torsion_atom1, std::string& atom_to_replace_upon_derivatization);
+    void ProfileOpenValenceAtomNeighbors(std::string& atom_to_replace_upon_derivatization);
     void ChangeElementSymbol(std::string new_element);
     void ModifyRingGeometryForSp2SideGroupAtom();
     void ChangeHybridizationType(std::string hybridization_type);
@@ -832,7 +832,7 @@ void CoComplex::SetOpenValences(std::vector<OpenValence*> open_valences){
 
 
 //CONSTRUCTOR
-OpenValence::OpenValence(CoComplex* cocomplex, MolecularModeling::Atom* atom, int num_threads, std::string linkage_torsion_atom1, std::string derivatize_type, bool linkage_torsion_preset, std::string linkage_torsion_value_str, std::vector<std::string>& explicit_torsion_str, std::vector<std::pair<std::string, std::string> >& explicit_torsion_str_preset, std::string moiety_path, std::string moiety_name_pattern){
+OpenValence::OpenValence(CoComplex* cocomplex, MolecularModeling::Atom* atom, int num_threads, std::string derivatize_type, bool linkage_torsion_preset, std::string linkage_torsion_value_str, std::vector<std::string>& explicit_torsion_str, std::vector<std::pair<std::string, std::string> >& explicit_torsion_str_preset, std::string moiety_path, std::string moiety_name_pattern){
     this->cocomplex_ = cocomplex;
     cocomplex->AddOpenValence(this);
     this->num_threads_ = num_threads;
@@ -840,7 +840,7 @@ OpenValence::OpenValence(CoComplex* cocomplex, MolecularModeling::Atom* atom, in
     this->derivatize_type_ = derivatize_type;
     this->moiety_path_ = moiety_path;
     this->moiety_name_pattern_ = moiety_name_pattern;
-    this->ProfileOpenValenceAtomNeighbors(linkage_torsion_atom1, derivatize_type);
+    this->ProfileOpenValenceAtomNeighbors(derivatize_type);
 
     this->linkage_torsion_preset_ = linkage_torsion_preset;
     if (linkage_torsion_preset){
@@ -931,10 +931,23 @@ void OpenValence::SetCoComplex(CoComplex* cocomplex){
 }
 
 //FUNCTIONS
-void OpenValence::ProfileOpenValenceAtomNeighbors(std::string& linkage_torsion_atom1, std::string& atom_to_replace_upon_derivatization){
+void OpenValence::ProfileOpenValenceAtomNeighbors(std::string& atom_to_replace_upon_derivatization){
     AtomVector open_valence_atom_intra_residue_neighbor = this->atom_->GetNode()->GetNodeNeighbors();
-    this->linkage_torsion_atom1_ = GetAtomByName(linkage_torsion_atom1, open_valence_atom_intra_residue_neighbor);
+	//Select linkage torsion atom1 arbitrarily
+	//Get linkage torsion atom 1 by name deprecated 20240911. Entry replaced with chain identifier
+    //this->chain_identifier_ = GetAtomByName(chain_identifier, open_valence_atom_intra_residue_neighbor);
     this->atom_replaced_upon_derivatization_ = GetAtomByName(atom_to_replace_upon_derivatization, open_valence_atom_intra_residue_neighbor);
+	for (unsigned int i = 0; i < open_valence_atom_intra_residue_neighbor.size(); i++){
+		MolecularModeling::Atom* neighbor = open_valence_atom_intra_residue_neighbor[i];
+		if (neighbor == this->atom_replaced_upon_derivatization_) continue;
+		this->linkage_torsion_atom1_ = neighbor;
+		break;
+	}
+
+	if (this->linkage_torsion_atom1_ == NULL){
+		std::cout << "Error, cannot find linkage torsion atom 1. Check input structure" << std::endl;
+		std::exit(1);	
+	}
 
     this->downstream_atoms_of_atom_replaced_.push_back(this->atom_); //Temporarily add to prevent backward recursion.Remove after function call.
     this->atom_replaced_upon_derivatization_->FindConnectedAtoms(this->downstream_atoms_of_atom_replaced_, 0);
