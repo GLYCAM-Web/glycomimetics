@@ -68,8 +68,11 @@ struct response{
 typedef std::vector<MolecularModeling::Atom*> AtomVector;
 int main(int argc, char* argv[]){
     std::string file_path_str = std::string(argv[1]);
+	std::cout << "cp1" << std::endl;
     MolecularModeling::Assembly assemblyA(file_path_str, gmml::InputFileType::PDB); 
+	std::cout << "cp2" << std::endl;
     VinaBondByDistanceForPDB(assemblyA, 0);
+	std::cout << "cp3" << std::endl;
 
 	AtomVector all_atoms = assemblyA.GetAllAtomsOfAssembly();
 	char* gemshome = std::getenv("GEMSHOME");

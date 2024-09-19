@@ -235,19 +235,22 @@ std::vector<OpenValence*> GetOpenValenceSideGroupSp3Oxygens (CoComplex* cocomple
 
             std::vector<std::string> underscore_split_token = gmml::Split(this_ligand_residue_id, "_");
             int this_residue_number = 999999;
+			std::string this_chain_id;
             if (underscore_split_token.size() == 6){ //Residue Id
+                this_chain_id = underscore_split_token[1];
                 this_residue_number = std::stoi(underscore_split_token[2]);
             }
             else if (underscore_split_token.size() == 8){ //Atom Id
+                this_chain_id = underscore_split_token[3];
                 this_residue_number = std::stoi(underscore_split_token[4]);
             }
 
-            if (this_residue_number != 999999 && vec_it->residue_number == this_residue_number){
+            if (this_residue_number != 999999 && vec_it->residue_number == this_residue_number && vec_it->chain_identifier == this_chain_id){
                 AtomVector this_ligand_residue_atoms = this_ligand_residue->GetAtoms();
                 for (unsigned int l = 0; l < this_ligand_residue_atoms.size(); l++){
                     MolecularModeling::Atom* atom = this_ligand_residue_atoms[l];
                     if (vec_it->atom_name == atom->GetName()){ //If same residue and same atom
-                        OpenValence* new_open_valence = new OpenValence(cocomplex, atom, num_threads, vec_it->linkage_torsion_atom1, vec_it->derivatization_type, vec_it->linkage_preset, vec_it->linkage_preset_torsion_value_str, vec_it->explicit_torsion_str, vec_it->explicit_torsion_str_preset, vec_it->moiety_path, vec_it->moiety_name_pattern);
+                        OpenValence* new_open_valence = new OpenValence(cocomplex, atom, num_threads, vec_it->derivatization_type, vec_it->linkage_preset, vec_it->linkage_preset_torsion_value_str, vec_it->explicit_torsion_str, vec_it->explicit_torsion_str_preset, vec_it->moiety_path, vec_it->moiety_name_pattern);
                         open_valences.push_back(new_open_valence);
                         this_open_option_found = true;
                         break;

@@ -251,6 +251,7 @@ bool pdb2glycam_matching(std::string file_path, std::map<MolecularModeling::Atom
         else{
             std::map<MolecularModeling::Atom*, MolecularModeling::Atom*>& first_match = all_isomorphisms[0];
 
+			std::cout << "Oligosaccharide " << i+1 << " matching successful." << std::endl;
 			std::cout << "=======================" << std::endl;
 			std::cout << "PDB_ATOM -> GLYCAM_ATOM" << std::endl; 
 			std::cout << "=======================" << std::endl;
@@ -264,7 +265,7 @@ bool pdb2glycam_matching(std::string file_path, std::map<MolecularModeling::Atom
                 actual_template_atom_match[actual_atom] = glycam_template_atom;
 				std::cout << actual_atom->GetResidue()->GetName() << "-" << actual_atom->GetName() << " -> " << glycam_template_atom->GetResidue()->GetName() << "-" << glycam_template_atom->GetName() << std::endl;
             }
-			std::cout << "=======================" << std::endl;
+			std::cout << "=======================\n" << std::endl;
         }
     }
 
