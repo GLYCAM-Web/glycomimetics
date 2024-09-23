@@ -45,7 +45,8 @@ struct open_valence_option{
     std::vector<std::pair<std::string, std::string> > explicit_torsion_str_preset;
     bool linkage_preset = false;
     std::string linkage_preset_torsion_value_str;
-    std::string linkage_torsion_atom1;
+    //std::string linkage_torsion_atom1;
+    std::string chain_identifier;
     std::string moiety_path;
     std::string moiety_name_pattern;
     
@@ -61,7 +62,7 @@ struct open_valence_option{
             //1st token
 	        if (i == 0){
 		        residue_number = std::stoi(underscore_split_tokens[0]);
-		        linkage_torsion_atom1 = underscore_split_tokens[1];
+		        chain_identifier = underscore_split_tokens[1];
 		        atom_name = underscore_split_tokens[2];
 
 	            if (underscore_split_tokens[3].find(":") == std::string::npos){
