@@ -432,25 +432,49 @@ std::vector<torsion> DetectImproperTorsions(AtomVector& pdb_atoms, std::vector<p
     std::vector<torsion> improper_torsions;
     std::vector<AtomVector> rings = DetectCyclesByDFS(pdb_atoms);
 
+	AtomVector trigonal_planar_atoms;
+
     //If an atom is not on ring, and has exactly three neighbors forming a plane, then this is an improper torsion.
     for(unsigned int i = 0; i < pdb_atoms.size();  i++){
         MolecularModeling::Atom* atom = pdb_atoms[i];
 
-	if (!atom_on_ring(atom, rings)){
-	    AtomVector neighbors = atom->GetNode()->GetNodeNeighbors();
+		if (!atom_on_ring(atom, rings)){
+	    	AtomVector neighbors = atom->GetNode()->GetNodeNeighbors();
 
-	    if (neighbors.size() == 3){
+	    	if (neighbors.size() == 3){
                 double angle_degrees = GetDihedral(atom, neighbors[0], neighbors[1], neighbors[2], 0);	    
-	        double angle_radians = angle_degrees / 180 * 3.14159;
-	        double cosine = std::cos(angle_radians);
+	        	double angle_radians = angle_degrees / 180 * 3.14159;
+	        	double cosine = std::cos(angle_radians);
 
-	        //If dihedral between atom1-3 and 2-4 is < 5 deg or > 175 deg, consider it planar and thus it is an improper dihedral
-	        if (std::abs(cosine) > 0.996){
-	            improper_torsions.emplace_back(torsion(atom, neighbors[0], neighbors[1], neighbors[2]));
-	        } 
-	    }
-	}
+	        	//If dihedral between atom1-3 and 2-4 is < 5 deg or > 175 deg, consider it planar and thus it is an improper dihedral
+	        	if (std::abs(cosine) > 0.996){
+	            	improper_torsions.emplace_back(torsion(atom, neighbors[0], neighbors[1], neighbors[2]));
+					//trigonal_planar_atoms.push_back(atom);
+	        	} 
+	    	}
+		}
     }
+
+	/*AtomVector visited;
+	for(unsigned int i = 0; i < trigonal_planar_atoms.size(); i++){
+		MolecularModeling::Atom* atom = trigonal_planar_atoms[i];
+		if (std::find(visited.begin(), visited.end(), atom) != visited.end()) continue;
+		visited.push_back(atom);
+
+		AtomVector neighbors = atom->GetNode()->GetNodeNeighbors();
+		for (unsigned int j = 0; j < neighbors.size(); j++){
+			MolecularModeling::Atom* n_atom = neighbors[j];
+			if (std::find(visited.begin(), visited.end(), n_atom) != visited.end()) continue;
+			visited.push_back(n_atom);
+
+			if (std::find(trigonal_planar_atoms.begin(), trigonal_planar_atoms.end(), n_atom) != trigonal_planar_atoms.end()){
+				//Found a double bond: atom=n_atom
+			}
+
+			
+		}
+		
+	}*/
 
     //Check whether or not this improper torsion involves both glycam and gaff atom types. 
     std::vector<torsion> glycam_gaff_improper_torsions;

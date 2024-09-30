@@ -479,7 +479,21 @@ std::pair<double, std::vector<double> > MonteCarlo(CoComplex* cocomplex, OpenVal
             }
         }
 
-        //std::cout << num_gens + 1 << " " << population_size * (num_gens + 1)  << " " << best_population.first << std::endl;
+		//Write out protein and ligand pdb files for the best rotamer of this generation. Example: cmpd_1_receptor_ga_15.pdb cmpd_1_ligand_ga_15.pdb
+		/*std::string open_atom_name = open_valence->GetOpenValenceAtom()->GetName();
+		std::string moiety_name = (derivative_moiety != NULL) ? derivative_moiety->GetMoietyName() : "anyname";
+		std::stringstream output_pdb_name;
+		output_pdb_name << output_pdb_path << "/complex" << open_valence_index << "-" << open_atom_name << "-" << moiety_name << "-" << "ga-" << num_gens;
+		output_pdb_name << ".pdb";
+		PdbFileSpace::PdbFile* best_pdb = cocomplex->GetCoComplexAssembly()->BuildPdbFileStructureFromAssembly();
+    	best_pdb->Write(output_pdb_name.str());
+    	std::cout << "Wrote pdb file " << output_pdb_name.str() << std::endl;
+
+		//Next: call open valence object to write out derivatized receptor&ligand pdb file
+		chromosome& best_torsions = best_population_this_generation.second;
+		//cocomplex->WriteDerivatizedLigandOffFile();
+    	//cocomplex->WriteDerivatizedLigandAndReceptorPdbFile(output_pdb_path, true, num_gens + 1);
+        //std::cout << num_gens + 1 << " " << population_size * (num_gens + 1)  << " " << best_population.first << std::endl;*/
 
         //Get best and worse fitness sum for all couples within the population
         std::vector<double> fitness_sorted = fitness;

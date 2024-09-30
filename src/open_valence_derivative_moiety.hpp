@@ -885,7 +885,9 @@ std::vector<AtomVector> OpenValence::GetRotatableBonds(){
     rotatable_bonds.insert(rotatable_bonds.end(), this->explicit_torsions_.begin(), this->explicit_torsions_.end());
     //Second insert linkage torsion associated with this open valence, if user specifies it as rotatable
     if (this->linkage_torsion_.size() == 4 && !this->linkage_torsion_preset_){
-        rotatable_bonds.push_back(this->linkage_torsion_);
+		if (bond_rotatable(this->linkage_torsion_[1], this->linkage_torsion_[2])){
+        	rotatable_bonds.push_back(this->linkage_torsion_);
+		}
     }
 
     //Finally, insert intra-secondary moiety torsions. 
@@ -896,6 +898,7 @@ std::vector<AtomVector> OpenValence::GetRotatableBonds(){
 
     return rotatable_bonds;
 }
+
 std::vector<std::pair<AtomVector, double> > OpenValence::GetPresetTorsions(){
     return this->explicit_torsions_preset_;
 }
@@ -1020,6 +1023,7 @@ void OpenValence::Derivatize(DerivativeMoiety* derivative_moiety){
     linkage_torsion.push_back(moiety_head_atom_neighbor);
 
     this->linkage_torsion_ = linkage_torsion;
+	//TODO: Add logic to detect double bond linkage. In this case not rotatable. 
 
     if (this->linkage_torsion_preset_){
         double preset_val = std::stod(this->linkage_torsion_value_str_);

@@ -849,4 +849,39 @@ MolecularModeling::Atom* GetAtomByResidueIndexAndAtomName(std::string residue_in
     MolecularModeling::Atom* atom = GetAtomByName(atom_name, residue_atoms);
     return atom;
 }
+
+bool is_linear(MolecularModeling::Atom* atom){
+	AtomVector n = atom->GetNode()->GetNodeNeighbors();
+	int num_neighbors = n.size();
+	if (num_neighbors != 2) return false;
+
+	double linear_cutoff = 175.00;
+
+	double angle_rad = GetAngle(n[0], atom, n[1], 0);
+	double angle_deg = angle_rad / M_PI * 180.00;
+	double angle_deg_abs = std::abs(angle_deg);
+
+	if (angle_deg_abs < linear_cutoff) return false;
+	return true;
+}
+
+bool is_trigonal_planar(MolecularModeling::Atom* atom){
+	AtomVector n = atom->GetNode()->GetNodeNeighbors();
+    int num_neighbors = n.size();
+	if (num_neighbors != 3) return false;
+	
+	double planar_cutoff = 175.00;
+
+	double dihedral_deg = GetDihedral(n[0], n[1], n[2], atom, 0);
+	double dihedral_deg_abs = std::abs(dihedral_deg);
+
+	if (dihedral_deg_abs < planar_cutoff) return false;
+	return true;
+}
+
+bool bond_rotatable(MolecularModeling::Atom* atom1, MolecularModeling::Atom* atom2){
+	if (is_linear(atom1) && is_linear(atom2)) return false;
+	if (is_trigonal_planar(atom1) && is_trigonal_planar(atom2)) return false;
+	return true;
+}
 #endif // UTILITY_HPP
