@@ -494,7 +494,7 @@ CoComplex::CoComplex(std::string file_path, std::string gems_home, std::string o
     this->receptor_assembly_ = new MolecularModeling::Assembly();
     this->ligand_assembly_ = new MolecularModeling::Assembly();
     //For now find receptor by check if protein, other atoms are all considered ligand. 
-    std::vector<std::string> other_receptor_residue_names = {"CA","HOH", "WAT", "ACE", "NME"};
+    std::vector<std::string> other_receptor_residue_names = {"CA","HOH", "WAT", "ACE", "NME", "NA", "CL"};
     std::vector<MolecularModeling::Residue*> assembly_residues = this->cocomplex_assembly_->GetResidues();
     for (unsigned int i = 0; i < assembly_residues.size(); i++){
 	std::string resname = assembly_residues[i]->GetName();
@@ -590,7 +590,8 @@ void CoComplex::WriteDerivatizedLigandAndReceptorPdbFile(std::string output_path
         }
     }
 
-    ReorderAtomsForZMatrix(derivatized_ligand_assembly);
+	//This is a very pointless and buggy function. Deprecated. Yao:20241025
+    //ReorderAtomsForZMatrix(derivatized_ligand_assembly);
 
     //Store old atom names
     std::vector<std::string> old_names;
@@ -598,12 +599,12 @@ void CoComplex::WriteDerivatizedLigandAndReceptorPdbFile(std::string output_path
     AtomVector ligand_assembly_atoms = derivatized_ligand_assembly.GetAllAtomsOfAssembly();
 
     for (unsigned int i = 0; i < ligand_assembly_atoms.size(); i++){
-		old_names.push_back(ligand_assembly_atoms[i]->GetName());
+		MolecularModeling::Atom* a = ligand_assembly_atoms[i];
+		old_names.push_back(a->GetName());
         std::stringstream new_name;
-        new_name << ligand_assembly_atoms[i]->GetElementSymbol() << i+1;
-        ligand_assembly_atoms[i]->SetName(new_name.str());
+        new_name << a->GetElementSymbol() << i+1;
+        a->SetName(new_name.str());
     }
-
 
     //pdb_file_name.erase(pdb_file_name.size()-1); //Remove last "_"
     if (ga){
@@ -1021,6 +1022,7 @@ void OpenValence::Derivatize(DerivativeMoiety* derivative_moiety){
     AtomVector dummy_atoms = derivative_moiety->GetDummyAtoms();
 
     //std::vector<AtomVector> intra_moiety_torsions = derivative_moiety->GetIntraMoietyTorsions();
+    //TODO:Yao 20241022 Think about deprecating linkage torsion. Remove at least the 1st fake head atom. 
     AtomVector linkage_torsion;
     linkage_torsion.push_back(this->linkage_torsion_atom1_);
     linkage_torsion.push_back(this->atom_);
@@ -1034,6 +1036,7 @@ void OpenValence::Derivatize(DerivativeMoiety* derivative_moiety){
         this->explicit_torsions_preset_.emplace_back(std::make_pair(linkage_torsion, preset_val));
     }
 
+	AtomVector real_atoms = derivative_moiety->GetRealAtoms();
 
     MolecularModeling::Assembly moiety_assembly = *(derivative_moiety->GetMoietyAssembly());
     for (unsigned int j = 0; j < this->num_threads_; j++){
@@ -1056,7 +1059,6 @@ void OpenValence::Derivatize(DerivativeMoiety* derivative_moiety){
         }
     }
 
-
     //Save the coordinates of the moiety atoms right after grafting for restoring later if necessary.
     AtomVector all_moiety_atoms = moiety_assembly.GetAllAtomsOfAssembly();
     for (unsigned int i = 0; i < all_moiety_atoms.size(); i++){
@@ -1075,7 +1077,6 @@ void OpenValence::Derivatize(DerivativeMoiety* derivative_moiety){
     for (unsigned int i = 0; i < this->downstream_atoms_of_atom_replaced_.size(); i++){
         this->atom_->GetResidue()->RemoveAtom(this->downstream_atoms_of_atom_replaced_[i], false);
     }
-
 
 }
 

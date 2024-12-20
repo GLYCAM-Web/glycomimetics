@@ -23,6 +23,7 @@
 #include <vector>
 #include <iostream>
 #include <string>
+#include <cstring>
 #include <fstream>
 #include <sstream>
 #include <cmath>
@@ -34,26 +35,24 @@
 #include <functional> //std::greater
 
 struct available_atom{
-    available_atom(std::string residue_index_str, std::string resname, std::string chain_id, std::string atom_name, std::string atom_to_replace){
-    	this->residue_index_str_ = residue_index_str;
-		this->resname_ = resname;
+    available_atom(MolecularModeling::Atom* atom, std::string pdb_resname, std::string chain_id, std::string residue_index, std::string atom_name, std::string atom_to_replace){
+		this->atom_ = atom;
+		this->pdb_resname_ = pdb_resname;
 		this->chain_id_ = chain_id;
+    	this->residue_index_ = residue_index;
 		this->atom_name_ = atom_name;
 		this->atom_to_replace_ = atom_to_replace;
     }
 	void print_attribute(std::ofstream& output){
-		//std::cout << "Available open valence atom: " << std::endl;
-		//std::cout << "Residue index: " << this->residue_index_str_ << std::endl;
-		//std::cout << "Atom to modify: " << this->atom_name_ << std::endl;
-		//std::cout << "Downstream atom to replace: " << this->atom_to_replace_ << std::endl;
-		//std::cout << "New option: " << this->residue_index_str_ << "-" << this->atom_name_ << "-" << this->atom_to_replace_ << std::endl;
-		output << this->residue_index_str_ << "-" << this->resname_ << "-" << this->chain_id_ << "-" << this->atom_name_ << "-" << this->atom_to_replace_ << std::endl;
+		output << this->pdb_resname_ << "-" << this->chain_id_ << "-" << this->residue_index_ << "-" << this->atom_name_ << "-" << this->pdb_atomnum_ << "-" << this->glycam_resname_ << "-" << glycam_resnum_ << "-" << this->glycam_atomnum_ << "\n";
 	}
-    std::string residue_index_str_, resname_, chain_id_, atom_name_, atom_to_replace_;
+	MolecularModeling::Atom* atom_ = NULL;
+    std::string pdb_resname_, chain_id_, residue_index_, atom_name_, atom_to_replace_;
+	std::string pdb_atomnum_, glycam_resname_, glycam_resnum_, glycam_atomnum_;
 };
 
 struct response{
-    response(bool valid, bool pdb2glycam_available, std::vector<available_atom> available_atoms, std::vector<std::string> comments){
+    response(bool valid, bool pdb2glycam_available, std::vector<available_atom>& available_atoms, std::vector<std::string>& comments){
         this->is_valid_ = valid;
 		this->pdb2glycam_available_ = pdb2glycam_available;
 		this->available_atoms_ = available_atoms; 
@@ -65,29 +64,219 @@ struct response{
     std::vector<std::string> comments_;
 };
 
+bool CheckAttachmentQualification(AtomVector& cycle_atoms, AtomVector& sa_arm, AtomVector& visited_atoms, MolecularModeling::Atom* current_atom){
+	if (std::find(cycle_atoms.begin(), cycle_atoms.end(), current_atom) != cycle_atoms.end()) return false;
+	if (std::find(sa_arm.begin(), sa_arm.end(), current_atom) == sa_arm.end()) return false;
+	visited_atoms.push_back(current_atom);
+	AtomVector neighbors = current_atom->GetNode()->GetNodeNeighbors();
+
+	bool all_childs_true = true;
+	for (unsigned int i = 0; i < neighbors.size(); i++){
+		MolecularModeling::Atom* n = neighbors[i];
+		if (std::find(visited_atoms.begin(), visited_atoms.end(), n) != visited_atoms.end()) continue;
+		if (std::find(cycle_atoms.begin(), cycle_atoms.end(), n) != cycle_atoms.end()) continue;
+		if (std::find(sa_arm.begin(), sa_arm.end(), n) == sa_arm.end()) continue;
+
+		bool child_true = CheckAttachmentQualification(cycle_atoms, sa_arm, visited_atoms, n);
+
+		if (!child_true) all_childs_true = false;
+	}
+
+	return all_childs_true;
+}
+
+std::vector<std::pair<MolecularModeling::Atom*, AtomVector> > FindAttachReplacePairs(AtomVector& cycle_atoms, std::vector<AtomVector>& side_atoms){
+	std::vector<std::pair<MolecularModeling::Atom*, AtomVector> > attach_replace_pairs;
+	for (unsigned int i = 0; i < side_atoms.size(); i++){
+		AtomVector& sa_arm = side_atoms[i];
+
+		for (unsigned int j = 0; j < sa_arm.size(); j++){
+			MolecularModeling::Atom* sa = sa_arm[j];
+			if (sa == NULL) continue;
+
+			AtomVector neighbors = sa->GetNode()->GetNodeNeighbors();
+			std::string sa_element = sa->GetElementSymbol();
+
+			if (sa_element != "O" && sa_element != "N") continue;
+			if (sa_element == "O"){
+				MolecularModeling::Atom* h = NULL;
+				for (unsigned int k = 0; k < neighbors.size(); k++){
+					MolecularModeling::Atom* n = neighbors[k];
+					if (std::find(cycle_atoms.begin(), cycle_atoms.end(), n) != cycle_atoms.end()) continue;
+        			if (std::find(sa_arm.begin(), sa_arm.end(), n) == sa_arm.end()) continue;
+
+					std::string n_element = n->GetElementSymbol();
+					if (n_element == "H"){
+						h = n;
+						break;
+					}
+				}
+
+				if (h != NULL){
+					AtomVector replacements(1, h);
+					attach_replace_pairs.emplace_back(std::make_pair(sa, replacements));
+				}
+			} 
+			else if (sa_element == "N"){
+				MolecularModeling::Atom* heavy = NULL;
+				int num_qualify = 0;
+
+				for (unsigned int k = 0; k < neighbors.size(); k++){
+                    MolecularModeling::Atom* n = neighbors[k];
+					if (std::find(cycle_atoms.begin(), cycle_atoms.end(), n) != cycle_atoms.end()) continue;
+        			if (std::find(sa_arm.begin(), sa_arm.end(), n) == sa_arm.end()) continue;
+
+                    std::string n_element = n->GetElementSymbol();
+                    if (n_element == "H") continue;
+					AtomVector visited_atoms(1, sa);
+					bool qualify = CheckAttachmentQualification(cycle_atoms, sa_arm, visited_atoms, n);
+					if (qualify){ 
+						num_qualify++;
+						heavy = n;
+					}
+                }
+
+				if (num_qualify == 0){
+					std::cout << "Cannot find replacement atom for " << sa->GetId() << "\n";
+				}
+				else if (num_qualify >= 2){
+                	std::cout << "Multiple replacement atoms for " << sa->GetId() << "\n";
+            	}
+				else{
+					AtomVector replacements(1, heavy);
+                	//std::cout << "Replacement for " << sa->GetId() << " is " << heavy->GetId() << "\n";
+					attach_replace_pairs.emplace_back(std::make_pair(sa, replacements));
+            	}
+			}
+
+		}
+
+	}
+
+	return attach_replace_pairs;
+}
+
+std::vector<available_atom> FindOpenValenceAtoms(std::vector<Glycan::Monosaccharide*>& monos, AtomVector& atoms){
+	std::vector<available_atom> available_atoms;
+
+    for (unsigned int i = 0; i < monos.size(); i++){
+        Glycan::Monosaccharide* mono = monos[i];
+
+		AtomVector& cycle_atoms = mono->cycle_atoms_;
+		MolecularModeling::Residue* this_residue = cycle_atoms[0]->GetResidue();
+
+		mono->InitiateDetectionOfCompleteSideGroupAtoms();
+		std::vector<AtomVector>& side_atoms = mono->side_atoms_;
+		std::vector<std::pair<MolecularModeling::Atom*, AtomVector> > attach_replace_pairs = FindAttachReplacePairs(cycle_atoms, side_atoms);
+
+		std::string condensed_name = mono->sugar_name_.monosaccharide_short_name_;
+
+		std::string residue_id = this_residue->GetId();
+        std::vector<std::string> underscore_split_token = gmml::Split(residue_id, "_");
+
+		std::string pdb_resname = this_residue->GetName(); 
+		std::string chain_id = this_residue->GetChainID();
+        std::string pdb_residue_index = underscore_split_token[2];
+		
+		for (unsigned int j = 0; j < attach_replace_pairs.size(); j++){
+			std::pair<MolecularModeling::Atom*, AtomVector>& this_pair = attach_replace_pairs[j];
+			MolecularModeling::Atom* open_atom = this_pair.first;
+			AtomVector& replace_atoms = this_pair.second; 
+			std::string atom_name = open_atom->GetName();
+			std::string atom_to_replace = replace_atoms[0]->GetName();
+
+			std::string atom_id = open_atom->GetId();
+			std::vector<std::string> underscore_split_tokens = gmml::Split(atom_id, "_");
+			int pdb_atomnum = std::stoi(underscore_split_tokens[1]) + 1; //Atom index now starts at zero?
+
+			available_atoms.emplace_back(available_atom(open_atom, pdb_resname, chain_id, pdb_residue_index, atom_name, atom_to_replace));
+			available_atoms.back().pdb_atomnum_ = std::to_string(pdb_atomnum);
+			available_atoms.back().glycam_resname_ = condensed_name;
+		}
+    }
+	//std::exit(1);
+	return available_atoms;
+}
+
+void RearrangeResiduesAndAtoms(ResidueVector& residues, std::vector<Glycan::Monosaccharide*>& monos, std::map<MolecularModeling::Residue*, int>& rearranged_residues_map, std::map<MolecularModeling::Atom*, int>& rearranged_atoms_map){
+	ResidueVector rearranged_residues, proteins, ions, waters, sugars;	
+
+	for (unsigned int i = 0; i < monos.size(); i++){
+		MolecularModeling::Residue* r = monos[i]->cycle_atoms_[0]->GetResidue();
+		if (std::find(sugars.begin(), sugars.end(), r) == sugars.end()){
+			sugars.push_back(r);
+		}
+	}
+
+	std::vector<std::string> common_ions = {"cu", "zn", "cd", "mo", "mg", "k", "ca", "fe", "fe2", "co", "ni"};
+
+	for (unsigned int i = 0; i < residues.size(); i++){
+		MolecularModeling::Residue* r = residues[i];
+		std::string resname_lower = r->GetName();
+		for (char &c : resname_lower){
+        	c = std::tolower(c);
+    	}
+
+		if (r->CheckIfProtein()){
+			proteins.push_back(r);
+		}
+		else if (std::find(common_ions.begin(), common_ions.end(), resname_lower) != common_ions.end()){
+			ions.push_back(r);
+		}	
+		else if (resname_lower == "hoh" || resname_lower == "wat"){
+			//std::cout << "Water residue: " << r->GetId() << std::endl;
+			waters.push_back(r);
+		}
+		else if (std::find(sugars.begin(), sugars.end(), r) == sugars.end()){
+			std::cout << "Residue " << r->GetId() << " is not protein, ions, waters, or sugars. Ignored.\n";
+        }
+	}
+	
+	rearranged_residues.insert(rearranged_residues.end(), proteins.begin(), proteins.end());
+	rearranged_residues.insert(rearranged_residues.end(), ions.begin(), ions.end());
+	rearranged_residues.insert(rearranged_residues.end(), waters.begin(), waters.end());
+	rearranged_residues.insert(rearranged_residues.end(), sugars.begin(), sugars.end());
+
+	int atom_index = 0;
+	for (unsigned int i = 0; i < rearranged_residues.size(); i++){
+		MolecularModeling::Residue* r = rearranged_residues[i];
+		rearranged_residues_map[r] = i+1;
+
+		AtomVector atoms = r->GetAtoms();
+		for (unsigned int j = 0; j < atoms.size(); j++){
+			MolecularModeling::Atom* a = atoms[j];
+			atom_index++;
+			rearranged_atoms_map[a] = atom_index;
+		}		
+	}
+
+	return;
+}
+
 typedef std::vector<MolecularModeling::Atom*> AtomVector;
+
 int main(int argc, char* argv[]){
     std::string file_path_str = std::string(argv[1]);
-	std::cout << "cp1" << std::endl;
     MolecularModeling::Assembly assemblyA(file_path_str, gmml::InputFileType::PDB); 
-	std::cout << "cp2" << std::endl;
     VinaBondByDistanceForPDB(assemblyA, 0);
-	std::cout << "cp3" << std::endl;
 
-	AtomVector all_atoms = assemblyA.GetAllAtomsOfAssembly();
 	char* gemshome = std::getenv("GEMSHOME");
 	if (!gemshome){
         std::cout << "GEMSHOME environment variable must be set. Aborting." << std::endl;
         return 0;
     }
-    std::string gems_home(gemshome);
 
+    std::string gems_home(gemshome);
 	std::string lib1 = gems_home + "/gmml/dat/CurrentParams/leaprc.ff12SB_2014-04-24/amino12.lib";
 	std::string lib2 = gems_home + "/gmml/dat/CurrentParams/leaprc.ff12SB_2014-04-24/aminoct12.lib";
 	std::string lib3 = gems_home + "/gmml/dat/CurrentParams/leaprc.ff12SB_2014-04-24/aminont12.lib";
     std::vector<std::string> amino_libs = {lib1, lib2, lib3};
-
     std::string prep = gems_home + "/gmml/dat/prep/GLYCAM_06j-1.prep";
+
+    //Attempt pdb2glycam matching
+    std::map<MolecularModeling::Atom*, MolecularModeling::Atom*> actual_template_atom_match;
+    AtomVector atoms = assemblyA.GetAllAtomsOfAssembly();
+    bool pdb2glycam_successful = pdb2glycam_matching(file_path_str, actual_template_atom_match, atoms, gmml::InputFileType::PDB, amino_libs, prep);
 
     //Valid = have sugars and available open valence positions.
     bool is_valid = false, pdb2glycam_available = false;
@@ -96,15 +285,29 @@ int main(int argc, char* argv[]){
     std::vector<Glycan::Monosaccharide*> monos= std::vector<Glycan::Monosaccharide*>();
     std::vector<Glycan::Oligosaccharide*> oligos = assemblyA.ExtractSugars(amino_libs,monos,false,false);
 
-    if (oligos.empty()){
-	is_valid = false;
-        comments.push_back("Not elegible for pdb2glycam because no sugars were detected");
+	std::vector<Glycan::Oligosaccharide*> oligos_unlinked;
+    std::vector<Glycan::Monosaccharide*> monos_unlinked;
+
+    for (unsigned int i = 0; i < oligos.size(); i++){
+        Glycan::Oligosaccharide* this_oligo = oligos[i];
+        std::string condensed_sequence = this_oligo->IUPAC_name_;
+        std::string aglycone = condensed_sequence.substr(condensed_sequence.find_last_of("-")+1);
+
+        //If the aglycone has a protein residue name, skip
+        if( std::find( gmml::PROTEINS, ( gmml::PROTEINS + gmml::PROTEINSSIZE ), aglycone ) != ( gmml::PROTEINS + gmml::PROTEINSSIZE ) ){
+            std::cout << " Oligo " << " '" << condensed_sequence << "'" << " is N or O linked to protein. Skipping.\n";
+            continue;
+        }
+
+        oligos_unlinked.push_back(this_oligo);
+        std::vector<Glycan::Monosaccharide*>& this_oligo_monos = oligos[i]->mono_nodes_;
+        monos_unlinked.insert(monos_unlinked.end(), this_oligo_monos.begin(), this_oligo_monos.end());
     }
 
-    //Attempt pdb2glycam matching
-    std::map<MolecularModeling::Atom*, MolecularModeling::Atom*> actual_template_atom_match;
-    AtomVector atoms = assemblyA.GetAllAtomsOfAssembly();
-    bool pdb2glycam_successful = pdb2glycam_matching(file_path_str, actual_template_atom_match, atoms, gmml::InputFileType::PDB, amino_libs, prep);
+    if (oligos_unlinked.empty()){
+		is_valid = false;
+        comments.push_back("Not elegible for pdb2glycam because no sugars were detected");
+    }
 
     if (!pdb2glycam_successful){
         comments.push_back("Pdb2glycam matching failed. Cannot use this feature");
@@ -115,37 +318,24 @@ int main(int argc, char* argv[]){
     }
 
     //Detect available atoms for derivatization
-    AtomVector side_atoms;
-    std::vector<available_atom> available_atoms;  
+    std::vector<available_atom> available_atoms = FindOpenValenceAtoms(monos_unlinked, atoms);  
 
-    for (unsigned int i = 0; i < monos.size(); i++){
-        Glycan::Monosaccharide* mono = monos[i];
-		AtomVector cycle_atoms = mono->cycle_atoms_;
-		MolecularModeling::Residue* this_residue = cycle_atoms[0]->GetResidue();
+	ResidueVector residues = assemblyA.GetResidues();
+	std::map<MolecularModeling::Residue*, int> rearranged_residues_map;
+	std::map<MolecularModeling::Atom*, int> rearranged_atoms_map;
+	RearrangeResiduesAndAtoms(residues, monos_unlinked, rearranged_residues_map, rearranged_atoms_map);
 
-		std::string residue_id = this_residue->GetId();
-        std::vector<std::string> underscore_split_token = gmml::Split(residue_id, "_");
-        std::string residue_index = underscore_split_token[2];
-		std::string chain_id = this_residue->GetChainID();
-		std::string resname = this_residue->GetName(); 
-		AtomVector this_residue_atoms = this_residue->GetAtoms();
+	//std::string pdb_atomnum_, glycam_resname_, glycam_resnum_, glycam_atomnum_;
+	for (unsigned int i = 0; i < available_atoms.size(); i++){
+		available_atom& aa = available_atoms[i];
+		MolecularModeling::Atom* a = aa.atom_;
+		MolecularModeling::Residue* r = a->GetResidue();
 
-		for (unsigned int j = 0; j < cycle_atoms.size(); j++){
-	    	MolecularModeling::Atom* cycle_atom = cycle_atoms[j];
-	    	AtomVector cycle_neighbors = cycle_atom->GetNode()->GetNodeNeighbors();
-
-	    	for (unsigned int k = 0; k < cycle_neighbors.size(); k++){
-	        	MolecularModeling::Atom* neighbor = cycle_neighbors[k];
-				std::string neighbor_element = neighbor->GetElementSymbol();
-
-				if (std::find(cycle_atoms.begin(), cycle_atoms.end(), neighbor) != cycle_atoms.end()) continue;
-				if (std::find(this_residue_atoms.begin(), this_residue_atoms.end(), neighbor) == this_residue_atoms.end()) continue; 
-				if (neighbor_element != "N" && neighbor_element != "O") continue;
-				
-		    	available_atoms.emplace_back(available_atom(residue_index, resname, chain_id, cycle_atom->GetName(), neighbor->GetName()));
-	    	}
-		}
-    }
+		int glycam_resum = rearranged_residues_map[r];
+		int glycam_atomnum = rearranged_atoms_map[a];
+		aa.glycam_resnum_ = std::to_string(glycam_resum);
+		aa.glycam_atomnum_ = std::to_string(glycam_atomnum);
+	}
 	
     std::string output_file_path_str = std::string(argv[2]);
 	std::ofstream output_file(output_file_path_str);
@@ -154,11 +344,19 @@ int main(int argc, char* argv[]){
 		std::exit(1);
 	}
 
+    int oligo_index = 0;
+	std::cout << "Oligos size: " << oligos_unlinked.size() << " \n";
+	for (unsigned int i = 0; i < oligos_unlinked.size(); i++){
+        Glycan::Oligosaccharide* oligo = oligos_unlinked[i];
+		output_file << "Oligosaccharide " << oligo_index + 1 << " condensed sequence: " << oligo->IUPAC_name_ << "\n";
+		oligo_index++;
+    }
+
 	std::cout << "Num avail atoms: " << available_atoms.size() << std::endl;
     for (unsigned int i = 0; i < available_atoms.size(); i++){
         available_atom& atom = available_atoms[i];
 		//std::string residue_index_str_, atom_name_, atom_to_replace_;
-		std::cout << "Open for derivatization: " << atom.residue_index_str_ << "-" << atom.atom_name_ << "-" << atom.atom_to_replace_ << std::endl;
+		std::cout << "Open for derivatization: " << atom.residue_index_ << "-" << atom.atom_name_ << "-" << atom.atom_to_replace_ << std::endl;
 		atom.print_attribute(output_file);
     }
 	output_file.close();

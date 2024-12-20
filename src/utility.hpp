@@ -62,7 +62,6 @@ void ReorderAtomsForZMatrix(MolecularModeling::Assembly& assembly){
     for (unsigned int i = 0; i < residues.size(); i++){
         MolecularModeling::Residue* residue = residues[i];
         AtomVector residue_atoms = residue->GetAtoms();
-
         MolecularModeling::Atom* atom1 = residue_atoms[0];
         AtomVector visited_atoms;
         TraverseGraphAndReorderAtoms(atom1, residue_reordered_atoms_map, visited_atoms, residue_atoms);
@@ -304,15 +303,26 @@ double GetAngle(MolecularModeling::Atom* atom1, MolecularModeling::Atom* atom2, 
 
 void SetAngle(MolecularModeling::Atom* atom1, MolecularModeling::Atom* atom2, MolecularModeling::Atom* atom3, double angle, int coord_index)
 {
+	//std::cout << "SetAngle a1, a2, a3: " << atom1->GetName() << "," <<  atom2->GetName() << "," <<  atom3->GetName() << std::endl;
     double current_angle = 0.0;
     GeometryTopology::Coordinate* a1 = atom1->GetCoordinates().at(coord_index);
     GeometryTopology::Coordinate* a2 = atom2->GetCoordinates().at(coord_index);
     GeometryTopology::Coordinate* a3 = atom3->GetCoordinates().at(coord_index);
 
+	//TODO: IF b1 (a2->a1) and b2 (a2->a3) are parallel or antiparallel, the cross product is a zero vector, will cause bug. Yao 20241022
+	//This will happen is a1 and a3 have almost identical coord.
+	GeometryTopology::Coordinate a1_a3(a1->GetX() - a3->GetX(), a1->GetY() - a3->GetY(), a1->GetZ() - a3->GetZ());
+	if (a1_a3.length() < gmml::DIST_EPSILON){
+		a3->SetX(a3->GetX() + gmml::DIST_EPSILON);
+		a3->SetY(a3->GetY() + gmml::DIST_EPSILON);
+		a3->SetZ(a3->GetZ() + gmml::DIST_EPSILON);
+	}
+	
     GeometryTopology::Coordinate* b1 = new GeometryTopology::Coordinate(*a1);
     b1->operator -(*a2);
     GeometryTopology::Coordinate* b2 = new GeometryTopology::Coordinate(*a3);
     b2->operator -(*a2);
+
 
     current_angle = acos((b1->DotProduct(*b2)) / (b1->length() * b2->length() + gmml::DIST_EPSILON));
     double rotation_angle = gmml::ConvertDegree2Radian(angle) - current_angle;
@@ -330,6 +340,7 @@ void SetAngle(MolecularModeling::Atom* atom1, MolecularModeling::Atom* atom2, Mo
     {
         GeometryTopology::Coordinate* atom_coordinate = (*it)->GetCoordinates().at(coord_index);
         GeometryTopology::Coordinate* result = new GeometryTopology::Coordinate();
+
         result->SetX(rotation_matrix[0][0] * atom_coordinate->GetX() + rotation_matrix[0][1] * atom_coordinate->GetY() +
                 rotation_matrix[0][2] * atom_coordinate->GetZ() + rotation_matrix[0][3]);
         result->SetY(rotation_matrix[1][0] * atom_coordinate->GetX() + rotation_matrix[1][1] * atom_coordinate->GetY() +
@@ -340,6 +351,7 @@ void SetAngle(MolecularModeling::Atom* atom1, MolecularModeling::Atom* atom2, Mo
         (*it)->GetCoordinates().at(coord_index)->SetX(result->GetX());
         (*it)->GetCoordinates().at(coord_index)->SetY(result->GetY());
         (*it)->GetCoordinates().at(coord_index)->SetZ(result->GetZ());
+		
 
 	delete result;
     }
@@ -353,12 +365,16 @@ void GraftMoietyAndRemoveDummyAtoms(MolecularModeling::Atom* ligand_ring_atom, M
     /*This is done is two steps. First, compute translation vector by arg1-arg2.Perform translation to superpose arg2 to arg1. Second, set angle arg4-arg1/arg2-arg3 to zero degrees. This superimposes arg4      to arg3. The end result is arg2-arg4 being superimposed onto arg1-arg3
     */
     //Obtain translation vector
+
     GeometryTopology::Coordinate* ring_coord = ligand_ring_atom->GetCoordinates().at(coord_index);
     GeometryTopology::Coordinate* fake_head_coord = dummy_ring_atom->GetCoordinates().at(coord_index);
     GeometryTopology::Coordinate translation_vector;
     translation_vector.SetX(ring_coord->GetX() - fake_head_coord->GetX());
     translation_vector.SetY(ring_coord->GetY() - fake_head_coord->GetY());
     translation_vector.SetZ(ring_coord->GetZ() - fake_head_coord->GetZ());
+
+	//std::cout << "Translation vector made " << dummy_ring_atom->GetName() << " -> " << ligand_ring_atom->GetName() << std::endl;
+	//std::cout << "T vector length should be 0: " << translation_vector.length() << std::endl;
 
     //Translate all moiety_atoms by this tranlation vector.
     AtomVector moiety_atoms = moiety_assembly.GetAllAtomsOfAssembly();

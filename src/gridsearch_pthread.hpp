@@ -487,9 +487,7 @@ double determine_minimum_interval(int num_torsions){
     return min_interval;
 }
 
-void GridsearchingForIndividualOpenValenceAtomAndMoiety(CoComplex* cocomplex, OpenValence* open_valence, int open_valence_index, std::string& moiety_path, std::string& this_moiety_filename,  
-		                                        int interval, int num_threads,  std::string& output_pdb_path, std::ofstream& gridsearch_log, std::ofstream& entropy_penalty, 
-							double& total_entropic_penalty, std::vector<open_valence_gridsearching_results>& open_valence_gridsearch_info){
+void GridsearchingForIndividualOpenValenceAtomAndMoiety(CoComplex* cocomplex, OpenValence* open_valence, int open_valence_index, std::string& moiety_path, std::string& this_moiety_filename, int interval, int num_threads,  std::string& output_pdb_path, std::ofstream& gridsearch_log, std::ofstream& entropy_penalty, double& total_entropic_penalty, std::vector<open_valence_gridsearching_results>& open_valence_gridsearch_info){
     gridsearch_log << "Start moiety\n";
     DerivativeMoiety* derivative_moiety = new DerivativeMoiety(moiety_path, this_moiety_filename, num_threads);
     std::string moiety_name = derivative_moiety->GetMoietyName();
@@ -526,6 +524,7 @@ void GridsearchingForIndividualOpenValenceAtomAndMoiety(CoComplex* cocomplex, Op
         //Before each grid searching call, restore natural ligand atoms to initial position.
         std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
         //std::pair<double, std::vector<double> > highest_affinity_torsion_value_pair = GridSearching(cocomplex, open_valence, receptor_atoms, ligand_atoms, moiety_atoms, free_tors, interval_actual, num_threads);
+
         std::pair<double, std::vector<double> > highest_affinity_torsion_value_pair = MonteCarlo(cocomplex, open_valence, receptor_atoms, ligand_atoms, moiety_atoms, free_tors, interval_actual, num_threads, output_pdb_path, open_valence_index, derivative_moiety);
 
         std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
@@ -620,12 +619,10 @@ void ProcessOpenValenceGridSearchInfo(CoComplex* cocomplex, std::vector<OpenVale
         all_torsions.insert(all_torsions.end(), free_tors.begin(), free_tors.end());
 
 		for (unsigned int x = 0; x < free_tors.size(); x++){
-            //std::cout << "Top moiety highest torisons " << top_moiety_torsion_values[x] << std::endl;
 	    	for (unsigned int t = 0; t < num_threads; t++){
                 SetDihedral(free_tors[x][0], free_tors[x][1], free_tors[x][2], free_tors[x][3], top_moiety_torsion_values[x], t);
-                //std::cout << "But actually this torsions is: " << GetDihedral(free_tors[x][0], free_tors[x][1], free_tors[x][2], free_tors[x][3], t) << std::endl;
 	    	}
-        }   
+        }
     }
 
     AtomVector ligand_atoms = cocomplex->GetLigandAtoms();
