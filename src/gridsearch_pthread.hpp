@@ -437,9 +437,7 @@ std::pair<double, std::vector<double> > GridSearching(CoComplex* cocomplex, Open
     return std::pair<double, std::vector<double> >(thread_highest_affinity_torsion_value_map.begin()->first, thread_highest_affinity_torsion_value_map.begin()->second);
 }
 
-void AttemptClashResolutionUsingRotamerLibrary(CoComplex* cocomplex, OpenValence* open_valence, AtomVector& receptor_atoms, AtomVector& ligand_atoms, AtomVector& moiety_atoms, 
-		                               std::vector<AtomVector>& free_tors, int interval_actual, int num_threads, double& highest_affinity, std::string& this_moiety_filename, 
-					       std::vector<open_valence_gridsearching_results>& open_valence_gridsearch_info, std::ofstream& gridsearch_log){
+void AttemptClashResolutionUsingRotamerLibrary(CoComplex* cocomplex, OpenValence* open_valence, AtomVector& receptor_atoms, AtomVector& ligand_atoms, AtomVector& moiety_atoms, std::vector<AtomVector>& free_tors, int interval_actual, int num_threads, double& highest_affinity, std::string& this_moiety_filename, std::vector<open_valence_gridsearching_results>& open_valence_gridsearch_info, std::ofstream& gridsearch_log, std::string output_pdb_path, int open_valence_index, DerivativeMoiety* derivative_moiety){
     std::cout << "Attempt clash resolution using rotamer library." << std::endl;
     gridsearch_log << "Attempt clash resolution using rotamer library." << std::endl;
 
@@ -452,7 +450,7 @@ void AttemptClashResolutionUsingRotamerLibrary(CoComplex* cocomplex, OpenValence
 
     if (!free_tors.empty()){
         //std::pair<double, std::vector<double> > highest_affinity_torsion_value_pair2 = GridSearching(cocomplex, open_valence, receptor_atoms, ligand_atoms, moiety_atoms, free_tors, interval_actual, num_threads);
-        std::pair<double, std::vector<double> > highest_affinity_torsion_value_pair2 = MonteCarlo(cocomplex, open_valence, receptor_atoms, ligand_atoms, moiety_atoms, free_tors, interval_actual, num_threads);
+        std::pair<double, std::vector<double> > highest_affinity_torsion_value_pair2 = MonteCarlo(cocomplex, open_valence, receptor_atoms, ligand_atoms, moiety_atoms, free_tors, interval_actual, num_threads, output_pdb_path, open_valence_index, derivative_moiety);
         highest_affinity = highest_affinity_torsion_value_pair2.first;
         std::vector<double>& highest_affinity_torsion_values2 = highest_affinity_torsion_value_pair2.second;
 
@@ -489,9 +487,7 @@ double determine_minimum_interval(int num_torsions){
     return min_interval;
 }
 
-void GridsearchingForIndividualOpenValenceAtomAndMoiety(CoComplex* cocomplex, OpenValence* open_valence, int open_valence_index, std::string& moiety_path, std::string& this_moiety_filename,  
-		                                        int interval, int num_threads,  std::string& output_pdb_path, std::ofstream& gridsearch_log, std::ofstream& entropy_penalty, 
-							double& total_entropic_penalty, std::vector<open_valence_gridsearching_results>& open_valence_gridsearch_info){
+void GridsearchingForIndividualOpenValenceAtomAndMoiety(CoComplex* cocomplex, OpenValence* open_valence, int open_valence_index, std::string& moiety_path, std::string& this_moiety_filename, int interval, int num_threads,  std::string& output_pdb_path, std::ofstream& gridsearch_log, std::ofstream& entropy_penalty, double& total_entropic_penalty, std::vector<open_valence_gridsearching_results>& open_valence_gridsearch_info){
     gridsearch_log << "Start moiety\n";
     DerivativeMoiety* derivative_moiety = new DerivativeMoiety(moiety_path, this_moiety_filename, num_threads);
     std::string moiety_name = derivative_moiety->GetMoietyName();
@@ -528,7 +524,8 @@ void GridsearchingForIndividualOpenValenceAtomAndMoiety(CoComplex* cocomplex, Op
         //Before each grid searching call, restore natural ligand atoms to initial position.
         std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
         //std::pair<double, std::vector<double> > highest_affinity_torsion_value_pair = GridSearching(cocomplex, open_valence, receptor_atoms, ligand_atoms, moiety_atoms, free_tors, interval_actual, num_threads);
-        std::pair<double, std::vector<double> > highest_affinity_torsion_value_pair = MonteCarlo(cocomplex, open_valence, receptor_atoms, ligand_atoms, moiety_atoms, free_tors, interval_actual, num_threads);
+
+        std::pair<double, std::vector<double> > highest_affinity_torsion_value_pair = MonteCarlo(cocomplex, open_valence, receptor_atoms, ligand_atoms, moiety_atoms, free_tors, interval_actual, num_threads, output_pdb_path, open_valence_index, derivative_moiety);
 
         std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
 
@@ -561,8 +558,7 @@ void GridsearchingForIndividualOpenValenceAtomAndMoiety(CoComplex* cocomplex, Op
     gridsearch_log << "After gridsearching affinity: " << post_gridsearch_affinity << std::endl;
 
     if (post_gridsearch_affinity > 0){
-	    AttemptClashResolutionUsingRotamerLibrary(cocomplex, open_valence, receptor_atoms, ligand_atoms, moiety_atoms, free_tors, interval_actual, num_threads, post_gridsearch_affinity, 
-			                          this_moiety_filename, open_valence_gridsearch_info, gridsearch_log);
+	    AttemptClashResolutionUsingRotamerLibrary(cocomplex, open_valence, receptor_atoms, ligand_atoms, moiety_atoms, free_tors, interval_actual, num_threads, post_gridsearch_affinity, this_moiety_filename, open_valence_gridsearch_info, gridsearch_log, output_pdb_path, open_valence_index, derivative_moiety);
     }
 
     std::stringstream output_pdb_name;
@@ -580,7 +576,7 @@ void GridsearchingForIndividualOpenValenceAtomAndMoiety(CoComplex* cocomplex, Op
     gridsearch_log << "Wrote pdb file " << output_pdb_name.str() << std::endl;
 
     cocomplex->WriteDerivatizedLigandOffFile();
-    cocomplex->WriteDerivatizedLigandAndReceptorPdbFile(output_pdb_path);
+    cocomplex->WriteDerivatizedLigandAndReceptorPdbFile(output_pdb_path, false, 0);
 
     open_valence->RemoveDerivativeMoiety();
 
@@ -588,28 +584,27 @@ void GridsearchingForIndividualOpenValenceAtomAndMoiety(CoComplex* cocomplex, Op
     gridsearch_log << "End moiety" << std::endl << std::endl;
 }
 
-void ProcessOpenValenceGridSearchInfo(CoComplex* cocomplex, std::vector<OpenValence*>& open_valences, int interval, int num_threads, std::string& output_pdb_path, 
-		                      std::ofstream& gridsearch_log, std::vector<open_valence_gridsearching_results>& open_valence_gridsearch_info){
+void ProcessOpenValenceGridSearchInfo(CoComplex* cocomplex, std::vector<OpenValence*>& open_valences, int interval, int num_threads, std::string& output_pdb_path, std::ofstream& gridsearch_log, std::vector<open_valence_gridsearching_results>& open_valence_gridsearch_info){
 
     //Reproduce top affinity pose of each moiety. 
     std::cout << "Write the final pdb with the best moiety at each open valence position" << std::endl;
     AtomVector all_moiety_atoms;
     std::vector<AtomVector> all_torsions;
     for (unsigned int i = 0; i < open_valences.size(); i++){
-	OpenValence* open_valence = open_valences[i];
+		OpenValence* open_valence = open_valences[i];
 
         double top_affinity = open_valence_gridsearch_info[i].top_affinity_moiety_name_map.begin()->first;
-	std::string& top_moiety_filename = open_valence_gridsearch_info[i].top_affinity_moiety_name_map.begin()->second;
-	std::vector<double>& top_moiety_torsion_values = open_valence_gridsearch_info[i].moiety_name_top_pose_torsion_values_map[top_moiety_filename];
+		std::string& top_moiety_filename = open_valence_gridsearch_info[i].top_affinity_moiety_name_map.begin()->second;
+		std::vector<double>& top_moiety_torsion_values = open_valence_gridsearch_info[i].moiety_name_top_pose_torsion_values_map[top_moiety_filename];
 
         std::string moiety_path2 = open_valence->GetMoietyPath();
         std::string moiety_name_pattern = open_valence->GetMoietyNamePattern();
-	DerivativeMoiety* moiety = new DerivativeMoiety(moiety_path2, top_moiety_filename, num_threads);
-	open_valences[i]->Derivatize(moiety);
+		DerivativeMoiety* moiety = new DerivativeMoiety(moiety_path2, top_moiety_filename, num_threads);
+		open_valences[i]->Derivatize(moiety);
         AtomVector real_moiety_atoms = moiety->GetRealAtoms();
         all_moiety_atoms.insert(all_moiety_atoms.end(), real_moiety_atoms.begin(), real_moiety_atoms.end());
 	
-	std::vector<std::pair<AtomVector, double> > preset_torsions = open_valence->GetPresetTorsions();
+		std::vector<std::pair<AtomVector, double> > preset_torsions = open_valence->GetPresetTorsions();
         for (unsigned int a = 0; a < preset_torsions.size(); a++){
             AtomVector& this_tor = preset_torsions[a].first;
             double& this_prset_value = preset_torsions[a].second;
@@ -620,16 +615,14 @@ void ProcessOpenValenceGridSearchInfo(CoComplex* cocomplex, std::vector<OpenVale
         }
 
 
-	std::vector<AtomVector> free_tors = open_valence->GetRotatableBonds();
+		std::vector<AtomVector> free_tors = open_valence->GetRotatableBonds();
         all_torsions.insert(all_torsions.end(), free_tors.begin(), free_tors.end());
 
-	for (unsigned int x = 0; x < free_tors.size(); x++){
-            //std::cout << "Top moiety highest torisons " << top_moiety_torsion_values[x] << std::endl;
-	    for (unsigned int t = 0; t < num_threads; t++){
+		for (unsigned int x = 0; x < free_tors.size(); x++){
+	    	for (unsigned int t = 0; t < num_threads; t++){
                 SetDihedral(free_tors[x][0], free_tors[x][1], free_tors[x][2], free_tors[x][3], top_moiety_torsion_values[x], t);
-                //std::cout << "But actually this torsions is: " << GetDihedral(free_tors[x][0], free_tors[x][1], free_tors[x][2], free_tors[x][3], t) << std::endl;
-	    }
-        }   
+	    	}
+        }
     }
 
     AtomVector ligand_atoms = cocomplex->GetLigandAtoms();
@@ -643,7 +636,7 @@ void ProcessOpenValenceGridSearchInfo(CoComplex* cocomplex, std::vector<OpenVale
 
     if (InternalClashesExist(all_moiety_atoms, ligand_plus_moiety_atoms, 0)){
         std::cout << "If each moiety applies its best pose, they clash with each other. Attempt to resolve them." << std::endl;
-        std::pair<double, std::vector<double> > highest_affinity_torsion_values = MonteCarlo(cocomplex, open_valences[0], receptor_atoms, ligand_atoms, all_moiety_atoms, all_torsions, interval, num_threads);
+        std::pair<double, std::vector<double> > highest_affinity_torsion_values = MonteCarlo(cocomplex, open_valences[0], receptor_atoms, ligand_atoms, all_moiety_atoms, all_torsions, interval, num_threads, output_pdb_path, 0, NULL);
         std::vector<double>& best_torsion_values = highest_affinity_torsion_values.second;
         //FIXME: Openvalence parameter isn't really used at all. For now, just give any open valence. Remove this arg later on. 
 
@@ -657,9 +650,7 @@ void ProcessOpenValenceGridSearchInfo(CoComplex* cocomplex, std::vector<OpenVale
     cocomplex->GetCoComplexAssembly()->BuildPdbFileStructureFromAssembly()->Write(output_path_and_filename);
 
     //Remove last "_"
-    cocomplex->WriteDerivatizedLigandAndReceptorPdbFile(output_pdb_path);
-
-
+    cocomplex->WriteDerivatizedLigandAndReceptorPdbFile(output_pdb_path, false, 0);
     //TODO:check if moieties clash with each other. If so, how to resolve the clashes.
 
 }
@@ -686,12 +677,10 @@ void GridSearchingForOpenValenceAtoms(CoComplex* cocomplex, std::vector<OpenVale
 
         std::vector<std::string> all_moiety_filenames = glob(moiety_path, moiety_name_pattern);
 
-	for (unsigned int j = 0; j < all_moiety_filenames.size(); j++){
+		for (unsigned int j = 0; j < all_moiety_filenames.size(); j++){
             std::string& this_moiety_filename = all_moiety_filenames[j];
-	    GridsearchingForIndividualOpenValenceAtomAndMoiety(cocomplex, open_valence, i, moiety_path, this_moiety_filename, interval, num_threads, output_pdb_path, gridsearch_log, entropy_penalty,
-			                                                       total_entropic_penalty, open_valence_gridsearch_info);
-	}
-
+	    	GridsearchingForIndividualOpenValenceAtomAndMoiety(cocomplex, open_valence, i, moiety_path, this_moiety_filename, interval, num_threads, output_pdb_path, gridsearch_log, entropy_penalty, total_entropic_penalty, open_valence_gridsearch_info);
+		}
     }
 
     ProcessOpenValenceGridSearchInfo(cocomplex, open_valences, interval, num_threads, output_pdb_path, gridsearch_log, open_valence_gridsearch_info);

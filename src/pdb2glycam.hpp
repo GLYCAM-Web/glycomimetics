@@ -170,54 +170,54 @@ bool pdb2glycam_matching(std::string file_path, std::map<MolecularModeling::Atom
     amino_libs.push_back("../gmml/dat/CurrentParams/leaprc.ff12SB_2014-04-24/aminont12.lib");
     std::string prep = "../gmml/dat/prep/GLYCAM_06j-1.prep";*/
 
-    std::vector<Glycan::Monosaccharide*> monos= std::vector<Glycan::Monosaccharide*>();
+    std::vector<Glycan::Monosaccharide*> monos;
     //The sugar identification code in monosaccharide.cc is written for non-hydrogenated structure. Must remove H before using pdb2glycam
     RemoveProtons(all_atoms);
     std::vector<Glycan::Oligosaccharide*> oligos = assemblyA.ExtractSugars(amino_libs,monos,false,false);
+	std::vector<Glycan::Oligosaccharide*> oligos_unlinked;
+    std::vector<Glycan::Monosaccharide*> monos_unlinked;
+
+	
+	for (unsigned int i = 0; i < oligos.size(); i++){
+		Glycan::Oligosaccharide* this_oligo = oligos[i];
+		std::string condensed_sequence = this_oligo->IUPAC_name_;
+		std::string aglycone = condensed_sequence.substr(condensed_sequence.find_last_of("-")+1);
+
+		//If the aglycone has a protein residue name, skip
+		if( std::find( gmml::PROTEINS, ( gmml::PROTEINS + gmml::PROTEINSSIZE ), aglycone ) != ( gmml::PROTEINS + gmml::PROTEINSSIZE ) ){
+			std::cout << " Oligo " << " '" << condensed_sequence << "'" << " is N or O linked to protein. Skipping.\n";
+			continue;
+		}
+
+		oligos_unlinked.push_back(this_oligo);
+		std::vector<Glycan::Monosaccharide*>& this_oligo_monos = oligos[i]->mono_nodes_;
+		monos_unlinked.insert(monos_unlinked.end(), this_oligo_monos.begin(), this_oligo_monos.end());
+	}
     ApplyProtonSet(all_atoms, input_heavy_atom_protons_map);
 
-
     //Right now side_atoms only contain the first atom of a side chain. Below I added the codes to attach all atoms to side_atoms.
-    for (std::vector<Glycan::Monosaccharide*>::iterator mono_it = monos.begin(); mono_it != monos.end(); mono_it++){
+    for (std::vector<Glycan::Monosaccharide*>::iterator mono_it = monos_unlinked.begin(); mono_it != monos_unlinked.end(); mono_it++){
 	    (*mono_it)->InitiateDetectionOfCompleteSideGroupAtoms ();
     }
 
-
-    //Now all side chain atoms are added.Then, make one monosaccharide a new residue, replacing the corresponding one in input pdb file. This is to solve the problem where
+    //Now all side chain atoms are added.Then, make one monos_unlinkedaccharide a new residue, replacing the corresponding one in input pdb file. This is to solve the problem where
     //    one residue contains multiple sugars, for example, a LacNac residue.
-    assemblyA.UpdateMonosaccharides2Residues(monos);
-    AtomVector assAatoms = assemblyA.GetAllAtomsOfAssembly();
+    assemblyA.UpdateMonosaccharides2Residues(monos_unlinked);
 
     std::map<Glycan::Oligosaccharide*, std::vector<std::string> > oligo_id_map;
     std::map<Glycan::Oligosaccharide*, std::vector<MolecularModeling::Residue*> > oligo_residue_map;
-
-    for (std::vector<Glycan::Oligosaccharide*>::iterator oligo_it = oligos.begin(); oligo_it != oligos.end(); oligo_it++){
-	    std::vector<std::string> empty_vector = std::vector<std::string>();
-	    oligo_id_map[*oligo_it] = empty_vector; 
-	    std::vector<MolecularModeling::Residue*> empty_residue_vector = std::vector<MolecularModeling::Residue*>();
-	    oligo_residue_map[*oligo_it] = empty_residue_vector;
-    }
     
-    gmml::GlycamResidueNamingMap res_map = assemblyA.ExtractResidueGlycamNamingMap(oligos, oligo_id_map, oligo_residue_map);
+    gmml::GlycamResidueNamingMap res_map = assemblyA.ExtractResidueGlycamNamingMap(oligos_unlinked, oligo_id_map, oligo_residue_map);
 
-	/*for (unsigned int i = 0; i < assAatoms.size(); i++){
-        MolecularModeling::Atom* a = assAatoms[i];
-        AtomVector an = a->GetNode()->GetNodeNeighbors();
-        for (unsigned int j = 0; j < an.size(); j++){
-            MolecularModeling::Atom* n = an[j];
-            std::cout << "After Extract naming map " << a->GetResidue()->GetName() << "-" << a->GetName() <<  " " << a << " has neighbor " << n->GetResidue()->GetName() << "-" << n->GetName() << " " << n << std::endl;
-        }
-    }*/
+    assemblyA.PutAglyconeInNewResidueAndRearrangeGlycanResidues(oligos_unlinked, oligo_residue_map);
 
-    assemblyA.PutAglyconeInNewResidueAndRearrangeGlycanResidues(oligos, oligo_residue_map);
-
-    for (std::map<Glycan::Oligosaccharide*, std::vector<MolecularModeling::Residue*> >::iterator mapit = oligo_residue_map.begin(); mapit != oligo_residue_map.end(); mapit++){
+    /*for (std::map<Glycan::Oligosaccharide*, std::vector<MolecularModeling::Residue*> >::iterator mapit = oligo_residue_map.begin(); mapit != oligo_residue_map.end(); mapit++){
 	    std::vector<MolecularModeling::Residue*> res_vec = mapit->second;
 	    std::cout << "New oligo: " << std::endl;
 	    for (unsigned int t = 0; t < res_vec.size(); t++){
 	        std::cout << res_vec[t]->GetName() << std::endl;
 	    }
-    }
+    }*/
 
     assemblyA.TestUpdateResidueName2GlycamName(res_map, prep);
     //assemblyA.UpdateResidueName2GlycamName(res_map, prep);
@@ -225,14 +225,17 @@ bool pdb2glycam_matching(std::string file_path, std::map<MolecularModeling::Atom
     std::map<Glycan::Oligosaccharide*, pdb2glycam_matching_tracker*> match_tracker;
     assemblyA.MatchPdbAtoms2Glycam(oligo_residue_map, prep, match_tracker);
 
-    bool all_oligos_matched = true;
-    for (unsigned int i = 0; i < oligos.size(); i++){
-        pdb2glycam_matching_tracker* this_oligo_match_tracker = match_tracker[oligos[i]];
+    bool all_oligos_unlinked_matched = true;
+    for (unsigned int i = 0; i < oligos_unlinked.size(); i++){
+		Glycan::Oligosaccharide* ou = oligos_unlinked[i];
+		std::string condensed_sequence = ou->IUPAC_name_;
+
+        pdb2glycam_matching_tracker* this_oligo_match_tracker = match_tracker[ou];
         std::vector<std::map<MolecularModeling::Atom*, MolecularModeling::Atom*>>& all_isomorphisms = this_oligo_match_tracker->all_isomorphisms;
 
         if (all_isomorphisms.empty()){
-            all_oligos_matched = false;
-            std::cout << "Oligosaccharide " << i+1 << " matching failed." << std::endl;
+            all_oligos_unlinked_matched = false;
+            std::cout << "Oligosaccharide '" << condensed_sequence << "' matching failed." << std::endl;
             std::cout << "Here are the atoms that might be the issue:" << std::endl;
 
             int largest_iteration_length = this_oligo_match_tracker->largest_iteration_length;
@@ -251,7 +254,7 @@ bool pdb2glycam_matching(std::string file_path, std::map<MolecularModeling::Atom
         else{
             std::map<MolecularModeling::Atom*, MolecularModeling::Atom*>& first_match = all_isomorphisms[0];
 
-			std::cout << "Oligosaccharide " << i+1 << " matching successful." << std::endl;
+			std::cout << "Oligosaccharide " << condensed_sequence << " matching successful." << std::endl;
 			std::cout << "=======================" << std::endl;
 			std::cout << "PDB_ATOM -> GLYCAM_ATOM" << std::endl; 
 			std::cout << "=======================" << std::endl;
@@ -270,7 +273,7 @@ bool pdb2glycam_matching(std::string file_path, std::map<MolecularModeling::Atom
     }
 
     std::ofstream pdb2glycam_log("pdb2glycam.log");
-    if (!all_oligos_matched){
+    if (!all_oligos_unlinked_matched){
         std::cout << "Pdb2glycam matching failed." << std::endl;
         pdb2glycam_log << "Pdb2glycam matching failed." << std::endl;
 	    return false;

@@ -276,8 +276,9 @@ double ComputeChanceOfMating(double& fitness_percentile, double& best_affinity_s
 
 void MatingBasedOnFitness(population* parent_pop, population* offspring_pop, std::vector<double>* fitness_ptr, double best_fitness, double worst_fitness, AtomVector& moiety_atoms_no_h, AtomVector& moiety_plus_ligand_atoms_no_h, std::vector<AtomVector>& all_torsions, int thread_id, int start_index, int end_index, pthread_mutex_t* mutex_ptr, std::pair<double, chromosome>* best_population_pair_ptr, bool& clash_resolution_failure){
     int num_offspring_generated = 0;
-    int num_iteration = 0;
     int num_offspring_to_generate = end_index - start_index + 1;
+    int num_iteration = 0;
+	int max_mating_attempt = 100 * num_offspring_to_generate;
 
     population& parent_population =  (*parent_pop);
     population& offspring_population =  (*offspring_pop);
@@ -351,6 +352,10 @@ void MatingBasedOnFitness(population* parent_pop, population* offspring_pop, std
         }
 
         num_iteration++;
+		if (num_iteration > max_mating_attempt){
+			std::cout << "Failed to generate " << num_offspring_to_generate << " offsprings in " << max_mating_attempt << " trials. Aborting.\n";
+			std::exit(1);
+		}
 
     }
 
@@ -382,14 +387,22 @@ std::pair<double, chromosome> ObtainBestIndividual(std::vector<double> fitness, 
     return best_population_this_generation;
 }
 
-std::pair<double, std::vector<double> > MonteCarlo(CoComplex* cocomplex, OpenValence* open_valence, AtomVector& receptor_atoms, AtomVector& ligand_atoms, AtomVector& moiety_atoms,
-                                              std::vector<AtomVector>& all_torsions, int interval, int num_threads){
+std::pair<double, std::vector<double> > MonteCarlo(CoComplex* cocomplex, OpenValence* open_valence, AtomVector& receptor_atoms, AtomVector& ligand_atoms, AtomVector& moiety_atoms, std::vector<AtomVector>& all_torsions, int interval, int num_threads, std::string output_pdb_path, int open_valence_index, DerivativeMoiety* derivative_moiety){
 
     std::cout << "Start Monte Carlo" << std::endl;
     int num_bonds = all_torsions.size();
-    int max_num_gens = min_num_gens + num_gens_per_bond * (num_bonds - 1);
+    int max_num_gens = (num_bonds > 0) ? (min_num_gens + num_gens_per_bond * (num_bonds - 1)) : min_num_gens;
     int max_convergence_gens = min_convergence_gens + convergence_gens_per_bond * (num_bonds - 1);
-    chromosome new_chromosome (all_torsions.size(), 0.000); //Initialize each torsion to 0.000 degrees
+
+    //chromosome new_chromosome (all_torsions.size(), 0.000); //Initialize each torsion to 0.000 degrees. Deprecated by Yao 20241022
+	chromosome new_chromosome;
+	for (unsigned int i = 0; i < all_torsions.size(); i++){
+		AtomVector& tors = all_torsions[i];
+		double tors_val = GetDihedral(tors[0], tors[1], tors[2], tors[3], 0);
+		//std::cout << "Tors val is: " << tors_val << std::endl;
+		new_chromosome.push_back(tors_val);
+	}
+
     int num_individuals_per_thread = num_individuals / num_threads;
     population parent_population (num_individuals, new_chromosome);
     //population offspring_population (population_size, new_chromosome);
@@ -479,7 +492,21 @@ std::pair<double, std::vector<double> > MonteCarlo(CoComplex* cocomplex, OpenVal
             }
         }
 
-        //std::cout << num_gens + 1 << " " << population_size * (num_gens + 1)  << " " << best_population.first << std::endl;
+		//Write out protein and ligand pdb files for the best rotamer of this generation. Example: cmpd_1_receptor_ga_15.pdb cmpd_1_ligand_ga_15.pdb
+		/*std::string open_atom_name = open_valence->GetOpenValenceAtom()->GetName();
+		std::string moiety_name = (derivative_moiety != NULL) ? derivative_moiety->GetMoietyName() : "anyname";
+		std::stringstream output_pdb_name;
+		output_pdb_name << output_pdb_path << "/complex" << open_valence_index << "-" << open_atom_name << "-" << moiety_name << "-" << "ga-" << num_gens;
+		output_pdb_name << ".pdb";
+		PdbFileSpace::PdbFile* best_pdb = cocomplex->GetCoComplexAssembly()->BuildPdbFileStructureFromAssembly();
+    	best_pdb->Write(output_pdb_name.str());
+    	std::cout << "Wrote pdb file " << output_pdb_name.str() << std::endl;
+
+		//Next: call open valence object to write out derivatized receptor&ligand pdb file
+		chromosome& best_torsions = best_population_this_generation.second;
+		//cocomplex->WriteDerivatizedLigandOffFile();
+    	//cocomplex->WriteDerivatizedLigandAndReceptorPdbFile(output_pdb_path, true, num_gens + 1);
+        //std::cout << num_gens + 1 << " " << population_size * (num_gens + 1)  << " " << best_population.first << std::endl;*/
 
         //Get best and worse fitness sum for all couples within the population
         std::vector<double> fitness_sorted = fitness;
