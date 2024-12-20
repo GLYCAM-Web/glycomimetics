@@ -276,8 +276,9 @@ double ComputeChanceOfMating(double& fitness_percentile, double& best_affinity_s
 
 void MatingBasedOnFitness(population* parent_pop, population* offspring_pop, std::vector<double>* fitness_ptr, double best_fitness, double worst_fitness, AtomVector& moiety_atoms_no_h, AtomVector& moiety_plus_ligand_atoms_no_h, std::vector<AtomVector>& all_torsions, int thread_id, int start_index, int end_index, pthread_mutex_t* mutex_ptr, std::pair<double, chromosome>* best_population_pair_ptr, bool& clash_resolution_failure){
     int num_offspring_generated = 0;
-    int num_iteration = 0;
     int num_offspring_to_generate = end_index - start_index + 1;
+    int num_iteration = 0;
+	int max_mating_attempt = 100 * num_offspring_to_generate;
 
     population& parent_population =  (*parent_pop);
     population& offspring_population =  (*offspring_pop);
@@ -351,6 +352,10 @@ void MatingBasedOnFitness(population* parent_pop, population* offspring_pop, std
         }
 
         num_iteration++;
+		if (num_iteration > max_mating_attempt){
+			std::cout << "Failed to generate " << num_offspring_to_generate << " offsprings in " << max_mating_attempt << " trials. Aborting.\n";
+			std::exit(1);
+		}
 
     }
 
@@ -499,13 +504,8 @@ std::pair<double, std::vector<double> > MonteCarlo(CoComplex* cocomplex, OpenVal
 
 		//Next: call open valence object to write out derivatized receptor&ligand pdb file
 		chromosome& best_torsions = best_population_this_generation.second;
-		for (unsigned int x = 0; x < all_torsions.size(); x++){
-            std::cout << "This GA iteration highest torisons " << best_torsions[x] << std::endl;
-            SetDihedral(all_torsions[x][0], all_torsions[x][1], all_torsions[x][2], all_torsions[x][3], best_torsions[x], 0);
-            std::cout << "But actually this torsions is: " << GetDihedral(all_torsions[x][0], all_torsions[x][1], all_torsions[x][2], all_torsions[x][3], 0) << std::endl;
-        }
 		//cocomplex->WriteDerivatizedLigandOffFile();
-    	cocomplex->WriteDerivatizedLigandAndReceptorPdbFile(output_pdb_path, true, num_gens + 1);
+    	//cocomplex->WriteDerivatizedLigandAndReceptorPdbFile(output_pdb_path, true, num_gens + 1);
         //std::cout << num_gens + 1 << " " << population_size * (num_gens + 1)  << " " << best_population.first << std::endl;*/
 
         //Get best and worse fitness sum for all couples within the population
