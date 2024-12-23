@@ -3,6 +3,8 @@
 
 #include "includes/gmml.hpp"
 #include "includes/MolecularModeling/assembly.hpp"
+#include "includes/Glycan/oligosaccharide.hpp"
+#include "includes/Glycan/monosaccharide.hpp"
 #include "includes/ParameterSet/PrepFileSpace/prepfile.hpp"
 #include "includes/ParameterSet/PrepFileSpace/prepfileresidue.hpp"
 #include "includes/ParameterSet/PrepFileSpace/prepfileprocessingexception.hpp"
@@ -31,12 +33,29 @@
 #include "utility.hpp"
 #include "amber_handling.hpp"
 #include "pdb2glycam.hpp"
+#include "../validation/validation.hpp"
 
 #include <vector>
 #include <string>
 #include <iostream>
 #include <cmath>
 #include <filesystem>
+
+struct oligsaccharide_info_set{
+
+	oligsaccharide_info_set(Glycan::Oligosaccharide* oligo_){
+		this->oligo = oligo_;
+		this->monos = oligo_->mono_nodes_;
+		for (unsigned int i = 0; i < this->monos.size(); i++){
+			this->monos[i]->InitiateDetectionOfCompleteSideGroupAtoms();
+		}
+		this->open_valences = FindOpenValenceAtoms(this->monos);
+	}
+
+	Glycan::Oligosaccharide* oligo = NULL;
+	std::vector<Glycan::Monosaccharide*> monos;
+	std::vector<available_atom> open_valences;
+};
 
 class CoComplex;
 class OpenValence;
@@ -117,6 +136,7 @@ public:
     std::map<MolecularModeling::Atom*, double> GetAmberAtomChargeMap();
     std::map<MolecularModeling::Atom*, AtomVector> GetInputHeavyAtomProtonsMap();
     std::map<MolecularModeling::Atom*, AtomVector> GetAmberHeavyAtomProtonsMap();
+	available_atom* QueryOpenValence(MolecularModeling::Atom* a);
 
     //MUTATOR
     void RemoveLigandAtom(MolecularModeling::Atom* atom);
@@ -144,6 +164,7 @@ private:
     std::map<MolecularModeling::Atom*, GeometryTopology::Coordinate*> ligand_atoms_initial_position_;
     int num_threads_ = 1; 
     std::map<MolecularModeling::Atom*, MolecularModeling::Atom*> pdb_glycam_atom_match_map_;
+	std::vector<oligsaccharide_info_set> oligo_info;
 
 };
 
@@ -560,6 +581,11 @@ CoComplex::CoComplex(std::string file_path, std::string gems_home, std::string o
 	this->ligand_atoms_initial_position_[ligand_atom] = new_coord;
     }
 
+	std::vector<Glycan::Monosaccharide*> monos= std::vector<Glycan::Monosaccharide*>();
+    std::vector<Glycan::Oligosaccharide*> oligos = this->cocomplex_assembly_->ExtractSugars(amino_libs,monos,false,false);
+	for (unsigned int i = 0; i < oligos.size(); i++){
+		this->oligo_info.emplace_back(oligos[i]);
+	}
 }
 
 void CoComplex::WriteDerivatizedLigandAndReceptorPdbFile(std::string output_path, bool ga, int num_ga_iteration){
@@ -664,6 +690,19 @@ void CoComplex::WriteDerivatizedLigandPdb2GlycamLogFile(MolecularModeling::Assem
     }
 
     pdb2glycam_log.close();
+}
+
+available_atom* CoComplex::QueryOpenValence(MolecularModeling::Atom* a){
+	for (unsigned int i = 0; i < this->oligo_info.size(); i++){
+		oligsaccharide_info_set& info = this->oligo_info[i];
+		std::vector<available_atom>& open_valences = info.open_valences;
+
+		for (unsigned int j = 0; j < open_valences.size(); j++){
+			available_atom& aa = open_valences[j];
+			if (aa.atom_ == a) return &aa;
+		}
+	}
+	return NULL;
 }
 
 void CoComplex::WriteDerivatizedLigandOffFile(){
@@ -948,7 +987,18 @@ void OpenValence::ProfileOpenValenceAtomNeighbors(std::string& atom_to_replace_u
 	//Select linkage torsion atom1 arbitrarily
 	//Get linkage torsion atom 1 by name deprecated 20240911. Entry replaced with chain identifier
     //this->chain_identifier_ = GetAtomByName(chain_identifier, open_valence_atom_intra_residue_neighbor);
-    this->atom_replaced_upon_derivatization_ = GetAtomByName(atom_to_replace_upon_derivatization, open_valence_atom_intra_residue_neighbor);
+
+	//Choose either one of this: Get atom to replace by name for glycomimetic literature analysis
+    //this->atom_replaced_upon_derivatization_ = GetAtomByName(atom_to_replace_upon_derivatization, open_valence_atom_intra_residue_neighbor);
+
+	//Or this: Limited to O and N as in validation for actual tool source code
+	available_atom* aa = this->cocomplex_->QueryOpenValence(this->atom_);
+	if (aa == NULL){
+		std::cout << "Error. Failed to find validation open valence info for " << this->atom_->GetId() << "\n";
+		std::exit(1);
+	}
+	this->atom_replaced_upon_derivatization_ = GetAtomByName(aa->atom_to_replace_, open_valence_atom_intra_residue_neighbor);
+
 	for (unsigned int i = 0; i < open_valence_atom_intra_residue_neighbor.size(); i++){
 		MolecularModeling::Atom* neighbor = open_valence_atom_intra_residue_neighbor[i];
 		if (neighbor == this->atom_replaced_upon_derivatization_) continue;
