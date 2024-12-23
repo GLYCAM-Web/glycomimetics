@@ -39,7 +39,7 @@
 struct open_valence_option{
     int residue_number = 1;
     std::string atom_name;
-    std::string derivatization_type;
+    std::string derivatization_type; //So this is atom_to_replace?
     std::string linkage_torsion_rotatable;
     std::vector<std::string> explicit_torsion_str;
     std::vector<std::pair<std::string, std::string> > explicit_torsion_str_preset;
@@ -57,7 +57,7 @@ struct open_valence_option{
 	        std::string& this_token = dash_split_tokens[i];
 	        std::vector<std::string> underscore_split_tokens = gmml::Split(this_token, "_");	
 
-            //328_C5_N5_C10-moieties/pdbqt/sigma_aldehydes-pdbqt-328_C4_C5_N5_H5N
+            //328_A_N5_C10-moieties/pdbqt/sigma_aldehydes-pdbqt-328_C4_C5_N5_H5N
 
             //1st token
 	        if (i == 0){
@@ -67,7 +67,7 @@ struct open_valence_option{
 
 	            if (underscore_split_tokens[3].find(":") == std::string::npos){
 		            linkage_preset = false;
-		            derivatization_type = underscore_split_tokens[3];
+		            derivatization_type = underscore_split_tokens[3]; //Deriv type is atom name to replace?
 	            }
 	 	        else{
 		            linkage_preset = true;
