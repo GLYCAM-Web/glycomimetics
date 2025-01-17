@@ -46,7 +46,8 @@ AtomVector DetectAliphaticHydrogens(AtomVector& atoms){
     return aliphatic_hydrogens;
 }
 
-bool is_trigonal_planar(MolecularModeling::Atom* atom){
+//Redefined now? Yao 20250110
+/*bool is_trigonal_planar(MolecularModeling::Atom* atom){
     AtomVector neighbors = atom->GetNode()->GetNodeNeighbors();
     if (neighbors.size() != 3){
         return false;
@@ -58,7 +59,7 @@ bool is_trigonal_planar(MolecularModeling::Atom* atom){
         return true;
     }
     return false;
-}
+}*/
 
 std::vector<std::set<int>> FindSymmetricTerminalAtoms(MolecularModeling::Atom* atom, AtomVector& all_atoms){
     std::vector<std::set<int>> symmetrical_atom_indices;

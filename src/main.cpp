@@ -64,5 +64,6 @@ int main(int argc, char* argv[])
 
     GridSearchingForOpenValenceAtoms(cocomplex, open_valences, interval, num_threads, output_pdb_path, logfile_path, requested_combinations);
     std::cout << "End" << std::endl;
-} 
+	return 0;
+}
 
