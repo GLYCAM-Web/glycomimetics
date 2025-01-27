@@ -185,7 +185,7 @@ bool pdb2glycam_matching(std::string file_path, std::map<MolecularModeling::Atom
 
 		//If the aglycone has a protein residue name, skip
 		if( std::find( gmml::PROTEINS, ( gmml::PROTEINS + gmml::PROTEINSSIZE ), aglycone ) != ( gmml::PROTEINS + gmml::PROTEINSSIZE ) ){
-			std::cout << " Oligo " << " '" << condensed_sequence << "'" << " is N or O linked to protein. Skipping.\n";
+			std::cout << "Oligo " << " '" << condensed_sequence << "'" << " is N or O linked to protein. Skipping.\n";
 			continue;
 		}
 

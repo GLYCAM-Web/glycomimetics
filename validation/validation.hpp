@@ -54,16 +54,55 @@ struct available_atom{
 };
 
 struct response{
-    response(bool valid, bool pdb2glycam_available, std::vector<available_atom>& available_atoms, std::vector<std::string>& comments){
-        this->is_valid_ = valid;
-		this->pdb2glycam_available_ = pdb2glycam_available;
-		this->available_atoms_ = available_atoms; 
-		this->comments_ = comments;
-    }
-    bool is_valid_ = false;
-    bool pdb2glycam_available_ = false;
-    std::vector<available_atom> available_atoms_;
-    std::vector<std::string> comments_;
+    response(){};
+
+	void write(std::ofstream& out){
+		int num_oligos_valid = this->oligos_valid_.size();
+		int num_available_atoms = 0;
+		for (unsigned int i = 0; i < this->available_atoms_.size(); i++){
+			num_available_atoms += this->available_atoms_[i].size();
+		}
+
+		bool valid = (num_oligos_valid == 1 && num_available_atoms > 0 && this->pdb2glycam_successful_);
+		if (valid){
+			out << "Valid:True\n";
+		}
+		else{
+			out << "Valid:False\n";
+		}
+
+		out << "Reason:";
+		if (valid){
+			out << "All checks passed.";
+		}
+		else{
+			if (num_available_atoms == 0) out << "No open valence atom detected; ";
+			if (num_oligos_valid == 0) out << "No valid oligosaccharide detected; ";
+			else if (num_oligos_valid > 1) out << "Only one valid oligosaccharide allowed (" << num_oligos_valid << " detected; ";
+		}
+		out << "\n";
+		
+		this->write_valid_oligos(out);
+	}
+
+	void write_valid_oligos(std::ofstream& out){
+		for (unsigned int i = 0; i < this->oligos_valid_.size(); i++){
+			Glycan::Oligosaccharide* o = this->oligos_valid_[i];
+			out << "Oligosaccharide " << i + 1 << " condensed sequence: " << o->IUPAC_name_ << "\n";
+
+			std::vector<available_atom>& aa = this->available_atoms_[i];
+			for (unsigned int j = 0; j < aa.size(); j++){
+				available_atom& a = aa[j];
+				a.print_attribute(out);
+			}
+		}
+	}
+
+    bool valid_ = false;
+    bool pdb2glycam_successful_ = false;
+	std::vector<Glycan::Oligosaccharide*> oligos_valid_;
+    std::vector<std::vector<available_atom>> available_atoms_;
+    //std::vector<std::string> comments_;
 };
 
 bool CheckAttachmentQualification(AtomVector& cycle_atoms, AtomVector& sa_arm, AtomVector& visited_atoms, MolecularModeling::Atom* current_atom){
@@ -230,7 +269,7 @@ void RearrangeResiduesAndAtoms(ResidueVector& residues, std::vector<Glycan::Mono
 			waters.push_back(r);
 		}
 		else if (std::find(sugars.begin(), sugars.end(), r) == sugars.end()){
-			std::cout << "Residue " << r->GetId() << " is not protein, ions, waters, or sugars. Ignored.\n";
+			std::cout << "Residue " << r->GetId() << " is not protein, ions, waters, or part of a valid oligosaccharide. Ignored.\n";
         }
 	}
 	

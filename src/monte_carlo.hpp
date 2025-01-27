@@ -123,7 +123,6 @@ int GetUniformIntDistributionBetween(int a , int b){
 }
 
 void EvaluateFitness(population* pop_ptr, std::vector<double>* fitness_ptr, AtomVector& receptor_atoms, AtomVector& ligand_atoms, AtomVector& moiety_atoms, std::vector<AtomVector>& all_torsions, int thread_index, int start_index, int end_index, Glycan::Monosaccharide* mono, AtomVector& anomeric_phi_torsion){
-
     std::vector<double>& fitness = (*fitness_ptr);
     population& pop = (*pop_ptr);
     VinaScorePrerequisites prerequisites(moiety_atoms, receptor_atoms);

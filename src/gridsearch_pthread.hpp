@@ -550,7 +550,10 @@ void GridsearchingForIndividualOpenValenceAtomAndMoiety(CoComplex* cocomplex, Op
     }
 
     VinaScorePrerequisites prerequisites(moiety_atoms, receptor_atoms);
-    double post_gridsearch_affinity = VinaScoreInPlace(prerequisites, 0)[0];
+	AtomVector anomeric_phi_torsion = open_valence->GetAnomericPhiTorsion();
+	Glycan::Monosaccharide* mono = open_valence->GetMonosaccharide();
+	double phi_chi = ScoreAnomericPhiTorsion(mono, anomeric_phi_torsion, 0);
+    double post_gridsearch_affinity = VinaScoreInPlace(prerequisites, 0)[0] + phi_chi;
 
     std::cout << "After gridsearching affinity: " << post_gridsearch_affinity << std::endl;
     gridsearch_log << "After gridsearching affinity: " << post_gridsearch_affinity << std::endl;

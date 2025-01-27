@@ -211,6 +211,7 @@ public:
     void ProcessExplicitTorsionString(std::vector<std::string>& explicit_torsion_str);
     void ProcessPresetExplicitTorsionString(std::vector<std::pair<std::string, std::string> >& explicit_torsion_str);
     void RestoreMoietyAtomPositions();
+	void BuildChiTorsions(MolecularModeling::Atom* moiety_head_atom, MolecularModeling::Atom* moiety_head_atom_neighbor);
 
 private:
     int num_threads_ = 1;
@@ -233,7 +234,7 @@ private:
     std::string moiety_path_;
     std::string moiety_name_pattern_;
 	AtomVector anomeric_phi_torsion_;
-	Glycan::Monosaccharide* mono = NULL;
+	Glycan::Monosaccharide* mono_ = NULL;
 };
 
 //CONSTRUCTOR
@@ -1010,7 +1011,7 @@ AtomVector OpenValence::GetAnomericPhiTorsion(){
 	return this->anomeric_phi_torsion_;
 }
 Glycan::Monosaccharide* OpenValence::GetMonosaccharide(){
-	return this->mono;
+	return this->mono_;
 }
 
 //MUTATORS
@@ -1169,19 +1170,29 @@ void OpenValence::Derivatize(DerivativeMoiety* derivative_moiety){
         this->atom_->GetResidue()->RemoveAtom(this->downstream_atoms_of_atom_replaced_[i], false);
     }
 
-	Glycan::Monosaccharide* mono = this->cocomplex_->QueryMonoSaccharide(this->atom_);
-    MolecularModeling::Atom* anomeric_carbon = NULL, *anomeric_oxygen = NULL;
-    DetectAnomericCarbonAndOxygen(mono, anomeric_carbon, anomeric_oxygen);
-    if (anomeric_carbon != NULL && anomeric_oxygen != NULL){
+	this->BuildChiTorsions(moiety_head_atom, moiety_head_atom_neighbor);
+}
 
-		//Build anomeric phi torsion
-    	std::cout << "Anomeic C and O name: " << anomeric_carbon->GetName() << " , " << anomeric_oxygen->GetName() << std::endl;
-    	AtomVector anomeric_phi_torsion = DetectPhiAnomericTorsion(mono, anomeric_carbon, anomeric_oxygen, moiety_head_atom);
-		if (anomeric_phi_torsion[0] != NULL){
-			std::cout << "Anomeric phi angle: " << anomeric_phi_torsion[0]->GetName() << "-" << anomeric_phi_torsion[1]->GetName() << "-" << anomeric_phi_torsion[2]->GetName() << "-" << anomeric_phi_torsion[3]->GetName() << "\n";
-			this->anomeric_phi_torsion_ = anomeric_phi_torsion;
+void OpenValence::BuildChiTorsions(MolecularModeling::Atom* moiety_head_atom, MolecularModeling::Atom* moiety_head_atom_neighbor){
+	Glycan::Monosaccharide* mono = this->cocomplex_->QueryMonoSaccharide(this->atom_);
+    this->mono_ = mono;
+    MolecularModeling::Atom* ring_oxygen = NULL, *anomeric_carbon = NULL, *anomeric_oxygen = NULL;
+    DetectAnomericCarbonAndOxygen(mono, ring_oxygen, anomeric_carbon, anomeric_oxygen, this->downstream_atoms_of_atom_replaced_);
+
+    if (ring_oxygen != NULL && anomeric_carbon != NULL && anomeric_oxygen != NULL){
+        AtomVector anomeric_phi_torsion;
+        if (this->atom_ == anomeric_carbon){
+            anomeric_phi_torsion = {ring_oxygen, this->atom_, moiety_head_atom, moiety_head_atom_neighbor};
+        }
+        else if (this->atom_ == anomeric_oxygen){
+            anomeric_phi_torsion = {ring_oxygen, anomeric_carbon, this->atom_, moiety_head_atom};
+        }
+		if (!anomeric_phi_torsion.empty()){
+			std::cout << "Anomeric phi: " << anomeric_phi_torsion[0]->GetName() << "-" << anomeric_phi_torsion[1]->GetName() << "-" << anomeric_phi_torsion[2]->GetName() << "-" << anomeric_phi_torsion[3]->GetName() << std::endl;
 		}
-	}
+        this->anomeric_phi_torsion_ = anomeric_phi_torsion;
+    }
+	return;
 }
 
 void OpenValence::RemoveDerivativeMoiety(){
