@@ -557,7 +557,7 @@ double GetDihedral(MolecularModeling::Atom *atom1, MolecularModeling::Atom *atom
     b1xb2.CrossProduct(b2);
 
     current_dihedral = atan2(b1_m_b2n.DotProduct(b2xb3), b1xb2.DotProduct(b2xb3));
-    return current_dihedral/3.14159*180;
+    return current_dihedral*57.2957795;
 }
 
 

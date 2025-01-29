@@ -85,13 +85,13 @@ struct open_valence_option{
             }
 
 	        else{
-                if (this_token.find(":") == std::string::npos){
-                    std::cout << "Add user selected rotatable torsion: " << this_token << std::endl;
+                if (this_token.find("@") == std::string::npos){
+                    //std::cout << "Add user selected rotatable torsion: " << this_token << std::endl;
                     explicit_torsion_str.push_back(this_token);
                 }
                 else{
-	                std::cout << "Add to preset torsion " << this_token << std::endl;
-                    std::vector<std::string> colon_split_tokens = gmml::Split(this_token, ":");
+	                //std::cout << "Add to preset torsion " << this_token << std::endl;
+                    std::vector<std::string> colon_split_tokens = gmml::Split(this_token, "@");
                     explicit_torsion_str_preset.emplace_back(std::make_pair(colon_split_tokens[0], colon_split_tokens[1]));
                 }
 	        }
@@ -491,8 +491,6 @@ void GridsearchingForIndividualOpenValenceAtomAndMoiety(CoComplex* cocomplex, Op
     gridsearch_log << "Start moiety\n";
     DerivativeMoiety* derivative_moiety = new DerivativeMoiety(moiety_path, this_moiety_filename, num_threads);
     std::string moiety_name = derivative_moiety->GetMoietyName();
-    std::cout << "Moiety name is: " << moiety_name << std::endl;
-    gridsearch_log << "Moiety name is: " << moiety_name << std::endl;
     std::string open_atom_name = open_valence->GetOpenValenceAtom()->GetName();
     open_valence->Derivatize(derivative_moiety);
 
@@ -552,7 +550,10 @@ void GridsearchingForIndividualOpenValenceAtomAndMoiety(CoComplex* cocomplex, Op
     }
 
     VinaScorePrerequisites prerequisites(moiety_atoms, receptor_atoms);
-    double post_gridsearch_affinity = VinaScoreInPlace(prerequisites, 0)[0];
+	AtomVector anomeric_phi_torsion = open_valence->GetAnomericPhiTorsion();
+	Glycan::Monosaccharide* mono = open_valence->GetMonosaccharide();
+	double phi_chi = ScoreAnomericPhiTorsion(mono, anomeric_phi_torsion, 0);
+    double post_gridsearch_affinity = VinaScoreInPlace(prerequisites, 0)[0] + phi_chi;
 
     std::cout << "After gridsearching affinity: " << post_gridsearch_affinity << std::endl;
     gridsearch_log << "After gridsearching affinity: " << post_gridsearch_affinity << std::endl;
@@ -673,7 +674,6 @@ void GridSearchingForOpenValenceAtoms(CoComplex* cocomplex, std::vector<OpenVale
         double total_entropic_penalty = 0;
         std::string moiety_path = open_valence->GetMoietyPath();
         std::string moiety_name_pattern = open_valence->GetMoietyNamePattern();
-        std::cout << "Moiety name pattern: " << moiety_name_pattern << std::endl;
 
         std::vector<std::string> all_moiety_filenames = glob(moiety_path, moiety_name_pattern);
 

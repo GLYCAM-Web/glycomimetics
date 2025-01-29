@@ -60,15 +60,17 @@ int main(int argc, char* argv[]){
     AtomVector atoms = assemblyA.GetAllAtomsOfAssembly();
     bool pdb2glycam_successful = pdb2glycam_matching(file_path_str, actual_template_atom_match, atoms, gmml::InputFileType::PDB, amino_libs, prep);
 
-    //Valid = have sugars and available open valence positions.
-    bool is_valid = false, pdb2glycam_available = false;
-    std::vector<std::string> comments;
+    response r;
+	r.pdb2glycam_successful_ = pdb2glycam_successful;
+	std::vector<Glycan::Monosaccharide*> monos;
+	std::vector<Glycan::Oligosaccharide*> oligos;
 
-    std::vector<Glycan::Monosaccharide*> monos= std::vector<Glycan::Monosaccharide*>();
-    std::vector<Glycan::Oligosaccharide*> oligos = assemblyA.ExtractSugars(amino_libs,monos,false,false);
+	if (pdb2glycam_successful){
+    	oligos = assemblyA.ExtractSugars(amino_libs,monos,false,false);
+	}
 
-	std::vector<Glycan::Oligosaccharide*> oligos_unlinked;
-    std::vector<Glycan::Monosaccharide*> monos_unlinked;
+	std::vector<Glycan::Oligosaccharide*> oligos_valid;
+    std::vector<Glycan::Monosaccharide*> monos_valid;
 
     for (unsigned int i = 0; i < oligos.size(); i++){
         Glycan::Oligosaccharide* this_oligo = oligos[i];
@@ -77,47 +79,41 @@ int main(int argc, char* argv[]){
 
         //If the aglycone has a protein residue name, skip
         if( std::find( gmml::PROTEINS, ( gmml::PROTEINS + gmml::PROTEINSSIZE ), aglycone ) != ( gmml::PROTEINS + gmml::PROTEINSSIZE ) ){
-            std::cout << " Oligo " << " '" << condensed_sequence << "'" << " is N or O linked to protein. Skipping.\n";
+            std::cout << "Oligo " << " '" << condensed_sequence << "'" << " is N or O linked to protein. Skipping.\n";
             continue;
         }
 
-        oligos_unlinked.push_back(this_oligo);
+        oligos_valid.push_back(this_oligo);
         std::vector<Glycan::Monosaccharide*>& this_oligo_monos = oligos[i]->mono_nodes_;
-        monos_unlinked.insert(monos_unlinked.end(), this_oligo_monos.begin(), this_oligo_monos.end());
+        monos_valid.insert(monos_valid.end(), this_oligo_monos.begin(), this_oligo_monos.end());
     }
-
-    if (oligos_unlinked.empty()){
-		is_valid = false;
-        comments.push_back("Not elegible for pdb2glycam because no sugars were detected");
-    }
-
-    if (!pdb2glycam_successful){
-        comments.push_back("Pdb2glycam matching failed. Cannot use this feature");
-		pdb2glycam_available = false;
-    }
-    else{
-        pdb2glycam_available = true;
-    }
-
-    //Detect available atoms for derivatization
-    std::vector<available_atom> available_atoms = FindOpenValenceAtoms(monos_unlinked);  
+	r.oligos_valid_ = oligos_valid;
 
 	ResidueVector residues = assemblyA.GetResidues();
 	std::map<MolecularModeling::Residue*, int> rearranged_residues_map;
 	std::map<MolecularModeling::Atom*, int> rearranged_atoms_map;
-	RearrangeResiduesAndAtoms(residues, monos_unlinked, rearranged_residues_map, rearranged_atoms_map);
+	RearrangeResiduesAndAtoms(residues, monos_valid, rearranged_residues_map, rearranged_atoms_map);
 
-	//std::string pdb_atomnum_, glycam_resname_, glycam_resnum_, glycam_atomnum_;
-	for (unsigned int i = 0; i < available_atoms.size(); i++){
-		available_atom& aa = available_atoms[i];
-		MolecularModeling::Atom* a = aa.atom_;
-		MolecularModeling::Residue* r = a->GetResidue();
+    //Detect available atoms for derivatization
+	for (unsigned int i = 0; i < oligos_valid.size(); i++){
+        Glycan::Oligosaccharide* oligo = oligos_valid[i];
+		//std::cout << "Valid oligosaccharide " << i + 1 << " condensed sequence: " << oligo->IUPAC_name_ << "\n";
+		std::vector<Glycan::Monosaccharide*>& this_oligo_monos = oligo->mono_nodes_;		
+    	std::vector<available_atom> available_atoms = FindOpenValenceAtoms(this_oligo_monos);  
 
-		int glycam_resum = rearranged_residues_map[r];
-		int glycam_atomnum = rearranged_atoms_map[a];
-		aa.glycam_resnum_ = std::to_string(glycam_resum);
-		aa.glycam_atomnum_ = std::to_string(glycam_atomnum);
-	}
+		for (unsigned int j = 0; j < available_atoms.size(); j++){
+			available_atom& aa = available_atoms[j];
+			MolecularModeling::Atom* a = aa.atom_;
+			MolecularModeling::Residue* r = a->GetResidue();
+
+			int glycam_resum = rearranged_residues_map[r];
+			int glycam_atomnum = rearranged_atoms_map[a];
+			aa.glycam_resnum_ = std::to_string(glycam_resum);
+			aa.glycam_atomnum_ = std::to_string(glycam_atomnum);
+		}
+
+		r.available_atoms_.push_back(available_atoms);
+    }
 	
     std::string output_file_path_str = std::string(argv[2]);
 	std::ofstream output_file(output_file_path_str);
@@ -126,31 +122,7 @@ int main(int argc, char* argv[]){
 		std::exit(1);
 	}
 
-    int oligo_index = 0;
-	std::cout << "Oligos size: " << oligos_unlinked.size() << " \n";
-	for (unsigned int i = 0; i < oligos_unlinked.size(); i++){
-        Glycan::Oligosaccharide* oligo = oligos_unlinked[i];
-		output_file << "Oligosaccharide " << oligo_index + 1 << " condensed sequence: " << oligo->IUPAC_name_ << "\n";
-		oligo_index++;
-    }
-
-	std::cout << "Num avail atoms: " << available_atoms.size() << std::endl;
-    for (unsigned int i = 0; i < available_atoms.size(); i++){
-        available_atom& atom = available_atoms[i];
-		//std::string residue_index_str_, atom_name_, atom_to_replace_;
-		std::cout << "Open for derivatization: " << atom.residue_index_ << "-" << atom.atom_name_ << "-" << atom.atom_to_replace_ << std::endl;
-		atom.print_attribute(output_file);
-    }
+	r.write(output_file);
 	output_file.close();
-
-    if (available_atoms.empty()){
-        comments.push_back("No available positions for modification detected. For now must be ring hydroxyl/amino groups");
-		is_valid = false;
-    }
-    else{
-        is_valid = true;
-    }
- 
-    response this_response(is_valid, pdb2glycam_available, available_atoms, comments);
 	return 0;
 }

@@ -4,6 +4,7 @@
 #include "vina_atom_data.hpp"
 #include "utility.hpp"
 #include "open_valence_derivative_moiety.hpp"
+#include "includes/Glycan/monosaccharide.hpp"
 
 #include <iostream>
 #include <string>
@@ -40,10 +41,12 @@ struct fitness_thread_args{
     int thread_id = 0;
     int start_index = 0; 
     int end_index = 0;
+	Glycan::Monosaccharide* mono;
+	AtomVector anomeric_phi_torsion;
 
     fitness_thread_args(){
     }
-    fitness_thread_args(population* pop, std::vector<double>* fitness_address, AtomVector& receptor_atoms, AtomVector& ligand_atoms_vector, AtomVector& moiety_atoms_vector, std::vector<AtomVector>& all_torsions_vector, pthread_mutex_t* mutex, int thread_id_value, int start_index_value, int end_index_value){
+    fitness_thread_args(population* pop, std::vector<double>* fitness_address, AtomVector& receptor_atoms, AtomVector& ligand_atoms_vector, AtomVector& moiety_atoms_vector, std::vector<AtomVector>& all_torsions_vector, pthread_mutex_t* mutex, int thread_id_value, int start_index_value, int end_index_value, Glycan::Monosaccharide* mono_, AtomVector& anomeric_phi_torsion_){
         this->pop_ptr = pop;
         this->fitness_ptr = fitness_address;
         this->receptor_atoms = receptor_atoms;
@@ -54,6 +57,8 @@ struct fitness_thread_args{
         this->thread_id = thread_id_value;
         this->start_index = start_index_value;
         this->end_index = end_index_value;
+		this->mono = mono_;
+		this->anomeric_phi_torsion = anomeric_phi_torsion_;
     }
 
 };
@@ -117,8 +122,7 @@ int GetUniformIntDistributionBetween(int a , int b){
     return dist(mt);
 }
 
-void EvaluateFitness(population* pop_ptr, std::vector<double>* fitness_ptr, AtomVector& receptor_atoms, AtomVector& ligand_atoms, AtomVector& moiety_atoms, std::vector<AtomVector>& all_torsions, int thread_index, int start_index, int end_index){
-
+void EvaluateFitness(population* pop_ptr, std::vector<double>* fitness_ptr, AtomVector& receptor_atoms, AtomVector& ligand_atoms, AtomVector& moiety_atoms, std::vector<AtomVector>& all_torsions, int thread_index, int start_index, int end_index, Glycan::Monosaccharide* mono, AtomVector& anomeric_phi_torsion){
     std::vector<double>& fitness = (*fitness_ptr);
     population& pop = (*pop_ptr);
     VinaScorePrerequisites prerequisites(moiety_atoms, receptor_atoms);
@@ -134,8 +138,9 @@ void EvaluateFitness(population* pop_ptr, std::vector<double>* fitness_ptr, Atom
         }
 
         std::vector<double> scores = VinaScoreInPlace(prerequisites, thread_index);
+		double phi_chi = ScoreAnomericPhiTorsion(mono, anomeric_phi_torsion, thread_index);
         //std::cout << "Population " << i << " fitness " << scores[0] << std::endl;
-        fitness[i] = scores[0];
+        fitness[i] = scores[0] + phi_chi;
     }    
 
     return;
@@ -144,7 +149,7 @@ void EvaluateFitness(population* pop_ptr, std::vector<double>* fitness_ptr, Atom
 
 void* EvaluateFitnessStartRoutine (void* arg_ptr){
     MonteCarloSearching::fitness_thread_args* argstruct = (MonteCarloSearching::fitness_thread_args*) arg_ptr;
-    EvaluateFitness(argstruct->pop_ptr, argstruct->fitness_ptr, argstruct->receptor_atoms, argstruct->ligand_atoms, argstruct->moiety_atoms, argstruct->all_torsions, argstruct->thread_id, argstruct->start_index, argstruct->end_index);
+    EvaluateFitness(argstruct->pop_ptr, argstruct->fitness_ptr, argstruct->receptor_atoms, argstruct->ligand_atoms, argstruct->moiety_atoms, argstruct->all_torsions, argstruct->thread_id, argstruct->start_index, argstruct->end_index, argstruct->mono, argstruct->anomeric_phi_torsion);
     return NULL;
 }
 
@@ -354,7 +359,8 @@ void MatingBasedOnFitness(population* parent_pop, population* offspring_pop, std
         num_iteration++;
 		if (num_iteration > max_mating_attempt){
 			std::cout << "Failed to generate " << num_offspring_to_generate << " offsprings in " << max_mating_attempt << " trials. Aborting.\n";
-			std::exit(1);
+			std::exit(1); //TODO:Find a better way to handle this error. Yao 20250116
+			//break;
 		}
 
     }
@@ -441,11 +447,13 @@ std::pair<double, std::vector<double> > MonteCarlo(CoComplex* cocomplex, OpenVal
         std::exit(1);
     }
 
+	AtomVector anomeric_phi_torsion = open_valence->GetAnomericPhiTorsion();
+	Glycan::Monosaccharide* mono = open_valence->GetMonosaccharide();
     for (unsigned int i = 0; i < num_threads; i++){
         int start_index = num_individuals_per_thread * i;
         int end_index = (i < num_threads - 1) ? num_individuals_per_thread * (i+1) - 1 : num_individuals - 1;
 
-        fitness_argstruct[i] = MonteCarloSearching::fitness_thread_args(&parent_population, &fitness, receptor_atoms, ligand_atoms, moiety_atoms, all_torsions, &lock, i, start_index, end_index);
+        fitness_argstruct[i] = MonteCarloSearching::fitness_thread_args(&parent_population, &fitness, receptor_atoms, ligand_atoms, moiety_atoms, all_torsions, &lock, i, start_index, end_index, mono, anomeric_phi_torsion);
         mating_mutation_argstruct[i] = MonteCarloSearching::mating_mutation_thread_args(&parent_population, &offspring_population, &fitness, 999999, 999999, moiety_atoms_no_h, ligand_plus_moiety_atoms_no_h, all_torsions, &lock, i, start_index, end_index, &best_population, false);
     }
 

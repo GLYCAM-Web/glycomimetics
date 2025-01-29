@@ -5,8 +5,8 @@
 #include<cmath>
 #include<sstream>
 
-#include "/home/yao/glycomimetics/src/vina_atom_data.hpp"
-#include "/home/yao/glycomimetics/src/utility.hpp"
+#include "../../src/vina_atom_data.hpp"
+#include "../../src/utility.hpp"
 #include "includes/gmml.hpp"
 #include "includes/MolecularModeling/assembly.hpp"
 #include "includes/InputSet/PdbqtFileSpace/pdbqtfile.hpp"
@@ -37,7 +37,7 @@ bool bond_already_analyzed(MolecularModeling::Atom* atom2, MolecularModeling::At
     return false;
 }
 
-bool is_trigonal_planar(MolecularModeling::Atom* atom){
+/*bool is_trigonal_planar(MolecularModeling::Atom* atom){
     AtomVector neighbors = atom->GetNode()->GetNodeNeighbors();
     if (neighbors.size() != 3){
         return false;
@@ -62,7 +62,7 @@ bool is_linear(MolecularModeling::Atom* atom){
         return true;
     }
     return false;
-}
+}*/
 
 bool is_anomeric_carbon(MolecularModeling::Atom* atom, std::vector<AtomVector> cycles){
     if (atom->GetElementSymbol() != "C"){

@@ -34,6 +34,7 @@
 #include "amber_handling.hpp"
 #include "pdb2glycam.hpp"
 #include "../validation/validation.hpp"
+#include "glycan.hpp"
 
 #include <vector>
 #include <string>
@@ -47,7 +48,8 @@ struct oligsaccharide_info_set{
 		this->oligo = oligo_;
 		this->monos = oligo_->mono_nodes_;
 		for (unsigned int i = 0; i < this->monos.size(); i++){
-			this->monos[i]->InitiateDetectionOfCompleteSideGroupAtoms();
+			Glycan::Monosaccharide* mono =  this->monos[i];
+			mono->InitiateDetectionOfCompleteSideGroupAtoms();
 		}
 		this->open_valences = FindOpenValenceAtoms(this->monos);
 	}
@@ -137,6 +139,7 @@ public:
     std::map<MolecularModeling::Atom*, AtomVector> GetInputHeavyAtomProtonsMap();
     std::map<MolecularModeling::Atom*, AtomVector> GetAmberHeavyAtomProtonsMap();
 	available_atom* QueryOpenValence(MolecularModeling::Atom* a);
+	Glycan::Monosaccharide* QueryMonoSaccharide(MolecularModeling::Atom* a);
 
     //MUTATOR
     void RemoveLigandAtom(MolecularModeling::Atom* atom);
@@ -192,6 +195,8 @@ public:
     AtomVector GetAllMoietyAtoms();
     std::string GetMoietyPath();
     std::string GetMoietyNamePattern();
+	AtomVector GetAnomericPhiTorsion();
+	Glycan::Monosaccharide* GetMonosaccharide();
 
     //MUTATORS
     void SetCoComplex(CoComplex* cocomplex);
@@ -206,6 +211,7 @@ public:
     void ProcessExplicitTorsionString(std::vector<std::string>& explicit_torsion_str);
     void ProcessPresetExplicitTorsionString(std::vector<std::pair<std::string, std::string> >& explicit_torsion_str);
     void RestoreMoietyAtomPositions();
+	void BuildChiTorsions(MolecularModeling::Atom* moiety_head_atom, MolecularModeling::Atom* moiety_head_atom_neighbor);
 
 private:
     int num_threads_ = 1;
@@ -227,6 +233,8 @@ private:
     std::string linkage_torsion_value_str_;
     std::string moiety_path_;
     std::string moiety_name_pattern_;
+	AtomVector anomeric_phi_torsion_;
+	Glycan::Monosaccharide* mono_ = NULL;
 };
 
 //CONSTRUCTOR
@@ -240,7 +248,7 @@ DerivativeMoiety::DerivativeMoiety(std::string file_dir_path, std::string moiety
     }
     this->moiety_name_ = moiety_name;
     std::string full_path = file_dir_path + "/" + moiety_file_name;
-    std::cout << "Deri full path: " << full_path << std::endl;
+    //std::cout << "Deri full path: " << full_path << std::endl;
 
     this->moiety_pdbqt_file_ = new PdbqtFileSpace::PdbqtFile(full_path);
     this->moiety_assembly_ = new MolecularModeling::Assembly(full_path, gmml::InputFileType::PDBQT);
@@ -248,7 +256,7 @@ DerivativeMoiety::DerivativeMoiety(std::string file_dir_path, std::string moiety
     std::string resp_charge_file_name = moiety_name;
     resp_charge_file_name += "_resp_charges.out";
     std::string resp_charge_full_path = file_dir_path + "/" + resp_charge_file_name; 
-    std::cout << "Resp charge full path: " << resp_charge_full_path << std::endl;
+    //std::cout << "Resp charge full path: " << resp_charge_full_path << std::endl;
     std::ifstream resp_file(resp_charge_full_path);
     bool resp_exists = true;
 
@@ -705,6 +713,30 @@ available_atom* CoComplex::QueryOpenValence(MolecularModeling::Atom* a){
 	return NULL;
 }
 
+Glycan::Monosaccharide* CoComplex::QueryMonoSaccharide(MolecularModeling::Atom* a){
+	for (unsigned int i = 0; i < this->oligo_info.size(); i++){
+        oligsaccharide_info_set& info = this->oligo_info[i];
+		std::vector<Glycan::Monosaccharide*>& monos = info.monos;
+
+		for (unsigned int j = 0; j < monos.size(); j++){
+			Glycan::Monosaccharide* mono = monos[j];
+			AtomVector atoms = mono->cycle_atoms_;
+
+			std::vector<AtomVector>& side_atoms = mono->side_atoms_;	
+			for (unsigned int k = 0; k < side_atoms.size(); k++){
+				AtomVector& sa = side_atoms[k];
+				atoms.insert(atoms.end(), sa.begin(), sa.end());
+			}
+			
+			for (unsigned int k = 0; k < atoms.size(); k++){
+				MolecularModeling::Atom* atom = atoms[k];
+				if (atom == a) return mono;
+			}
+		}
+	}
+	return NULL;
+}
+
 void CoComplex::WriteDerivatizedLigandOffFile(){
     /*MolecularModeling::Assembly derivatized_ligand_assembly;
     derivatized_ligand_assembly.SetName("CORONA");
@@ -975,6 +1007,12 @@ std::string OpenValence::GetMoietyPath(){
 std::string OpenValence::GetMoietyNamePattern(){
     return this->moiety_name_pattern_;
 }
+AtomVector OpenValence::GetAnomericPhiTorsion(){
+	return this->anomeric_phi_torsion_;
+}
+Glycan::Monosaccharide* OpenValence::GetMonosaccharide(){
+	return this->mono_;
+}
 
 //MUTATORS
 void OpenValence::SetCoComplex(CoComplex* cocomplex){
@@ -1132,6 +1170,29 @@ void OpenValence::Derivatize(DerivativeMoiety* derivative_moiety){
         this->atom_->GetResidue()->RemoveAtom(this->downstream_atoms_of_atom_replaced_[i], false);
     }
 
+	this->BuildChiTorsions(moiety_head_atom, moiety_head_atom_neighbor);
+}
+
+void OpenValence::BuildChiTorsions(MolecularModeling::Atom* moiety_head_atom, MolecularModeling::Atom* moiety_head_atom_neighbor){
+	Glycan::Monosaccharide* mono = this->cocomplex_->QueryMonoSaccharide(this->atom_);
+    this->mono_ = mono;
+    MolecularModeling::Atom* ring_oxygen = NULL, *anomeric_carbon = NULL, *anomeric_oxygen = NULL;
+    DetectAnomericCarbonAndOxygen(mono, ring_oxygen, anomeric_carbon, anomeric_oxygen, this->downstream_atoms_of_atom_replaced_);
+
+    if (ring_oxygen != NULL && anomeric_carbon != NULL && anomeric_oxygen != NULL){
+        AtomVector anomeric_phi_torsion;
+        if (this->atom_ == anomeric_carbon){
+            anomeric_phi_torsion = {ring_oxygen, this->atom_, moiety_head_atom, moiety_head_atom_neighbor};
+        }
+        else if (this->atom_ == anomeric_oxygen){
+            anomeric_phi_torsion = {ring_oxygen, anomeric_carbon, this->atom_, moiety_head_atom};
+        }
+		if (!anomeric_phi_torsion.empty()){
+			std::cout << "Anomeric phi: " << anomeric_phi_torsion[0]->GetName() << "-" << anomeric_phi_torsion[1]->GetName() << "-" << anomeric_phi_torsion[2]->GetName() << "-" << anomeric_phi_torsion[3]->GetName() << std::endl;
+		}
+        this->anomeric_phi_torsion_ = anomeric_phi_torsion;
+    }
+	return;
 }
 
 void OpenValence::RemoveDerivativeMoiety(){
