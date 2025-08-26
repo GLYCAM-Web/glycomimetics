@@ -1,0 +1,722 @@
+
+########################################################
+
+
+########################################################
+
+########################################################
+# ACCORDING TO YOUR PARAMETER CHOICES:                 #
+########################################################
+
+pdb file: sample.pdb
+out file: sample.out
+I will use 8 threads
+To avoid zeros in the distances I assume 1.000000e-10 Angstrom minimum distance
+I will use length  1.00000 to mix translation and rotation distances
+I will use 1 snapshot every 1 snapshots
+I will superimpose all structures on the first one
+I will print entropy only for the first 20 neighbours
+I will superimpose all structures on the first one
+I will NOT be verbose
+########################################################
+
+2 atoms read
+4 atoms read
+8 atoms read
+16 atoms read
+32 atoms read
+64 atoms read
+128 atoms read
+256 atoms read
+512 atoms read
+1024 atoms read
+2048 atoms read
+4096 atoms read
+8192 atoms read
+16384 atoms read
+atoms stored...
+########################################################
+# SYSTEM:                                              #
+########################################################
+
+atoms =     3524, residues =      231, chains =        2, segments =        1
+
+########################################################
+
+atoms sorted ...
+N. residui: 231 -- N. atomi: 3524
+N. models: 5
+Using the first 10% of trajectory
+
+XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+
+Trans/Rot entropy estimate on weighted linear regression on first 4 nearest neighbours:
+      -nan +/-       -nan R units
+
+XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+
+XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+
+Trans entropy estimate on weighted linear regression on first 4 nearest neighbours:
+      -nan +/-       -nan R units
+
+XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+
+XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+
+
+XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+
+Rot entropy estimate on weighted linear regression on first 4 nearest neighbours:
+      -nan +/-       -nan R units
+
+XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+
+########################################################
+
+########################################################
+# ACCORDING TO YOUR PARAMETER CHOICES:                 #
+########################################################
+
+pdb file: sample.pdb
+out file: sample.out
+I will use 8 threads
+To avoid zeros in the distances I assume 1.000000e-10 Angstrom minimum distance
+I will use length  1.00000 to mix translation and rotation distances
+I will use 1 snapshot every 1 snapshots
+I will superimpose all structures on the first one
+I will print entropy only for the first 20 neighbours
+I will superimpose all structures on the first one
+I will NOT be verbose
+########################################################
+
+2 atoms read
+4 atoms read
+8 atoms read
+16 atoms read
+32 atoms read
+64 atoms read
+128 atoms read
+256 atoms read
+512 atoms read
+1024 atoms read
+2048 atoms read
+4096 atoms read
+8192 atoms read
+16384 atoms read
+32768 atoms read
+atoms stored...
+########################################################
+# SYSTEM:                                              #
+########################################################
+
+atoms =     3524, residues =      231, chains =        2, segments =        1
+
+########################################################
+
+atoms sorted ...
+N. residui: 231 -- N. atomi: 3524
+N. models: 10
+Using the first 20% of trajectory
+
+XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+
+Trans/Rot entropy estimate on weighted linear regression on first 9 nearest neighbours:
+      -nan +/-       -nan R units
+
+XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+
+XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+
+Trans entropy estimate on weighted linear regression on first 9 nearest neighbours:
+     -7.41 +/-   0.111193 R units
+
+XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+
+XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+
+
+XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+
+Rot entropy estimate on weighted linear regression on first 9 nearest neighbours:
+      -nan +/-       -nan R units
+
+XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+
+########################################################
+
+########################################################
+# ACCORDING TO YOUR PARAMETER CHOICES:                 #
+########################################################
+
+pdb file: sample.pdb
+out file: sample.out
+I will use 8 threads
+To avoid zeros in the distances I assume 1.000000e-10 Angstrom minimum distance
+I will use length  1.00000 to mix translation and rotation distances
+I will use 1 snapshot every 1 snapshots
+I will superimpose all structures on the first one
+I will print entropy only for the first 20 neighbours
+I will superimpose all structures on the first one
+I will NOT be verbose
+########################################################
+
+2 atoms read
+4 atoms read
+8 atoms read
+16 atoms read
+32 atoms read
+64 atoms read
+128 atoms read
+256 atoms read
+512 atoms read
+1024 atoms read
+2048 atoms read
+4096 atoms read
+8192 atoms read
+16384 atoms read
+32768 atoms read
+atoms stored...
+########################################################
+# SYSTEM:                                              #
+########################################################
+
+atoms =     3524, residues =      231, chains =        2, segments =        1
+
+########################################################
+
+atoms sorted ...
+N. residui: 231 -- N. atomi: 3524
+N. models: 15
+Using the first 30% of trajectory
+
+XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+
+Trans/Rot entropy estimate on weighted linear regression on first 14 nearest neighbours:
+      -nan +/-       -nan R units
+
+XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+
+XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+
+Trans entropy estimate on weighted linear regression on first 14 nearest neighbours:
+     -7.47 +/-   0.164238 R units
+
+XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+
+XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+
+
+XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+
+Rot entropy estimate on weighted linear regression on first 14 nearest neighbours:
+      -nan +/-       -nan R units
+
+XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+
+########################################################
+
+########################################################
+# ACCORDING TO YOUR PARAMETER CHOICES:                 #
+########################################################
+
+pdb file: sample.pdb
+out file: sample.out
+I will use 8 threads
+To avoid zeros in the distances I assume 1.000000e-10 Angstrom minimum distance
+I will use length  1.00000 to mix translation and rotation distances
+I will use 1 snapshot every 1 snapshots
+I will superimpose all structures on the first one
+I will print entropy only for the first 20 neighbours
+I will superimpose all structures on the first one
+I will NOT be verbose
+########################################################
+
+2 atoms read
+4 atoms read
+8 atoms read
+16 atoms read
+32 atoms read
+64 atoms read
+128 atoms read
+256 atoms read
+512 atoms read
+1024 atoms read
+2048 atoms read
+4096 atoms read
+8192 atoms read
+16384 atoms read
+32768 atoms read
+65536 atoms read
+atoms stored...
+########################################################
+# SYSTEM:                                              #
+########################################################
+
+atoms =     3524, residues =      231, chains =        2, segments =        1
+
+########################################################
+
+atoms sorted ...
+N. residui: 231 -- N. atomi: 3524
+N. models: 20
+Using the first 40% of trajectory
+
+XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+
+Trans/Rot entropy estimate on weighted linear regression on first 19 nearest neighbours:
+      -nan +/-       -nan R units
+
+XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+
+XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+
+Trans entropy estimate on weighted linear regression on first 19 nearest neighbours:
+      -nan +/-       -nan R units
+
+XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+
+XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+
+
+XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+
+Rot entropy estimate on weighted linear regression on first 19 nearest neighbours:
+      -nan +/-       -nan R units
+
+XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+
+########################################################
+
+########################################################
+# ACCORDING TO YOUR PARAMETER CHOICES:                 #
+########################################################
+
+pdb file: sample.pdb
+out file: sample.out
+I will use 8 threads
+To avoid zeros in the distances I assume 1.000000e-10 Angstrom minimum distance
+I will use length  1.00000 to mix translation and rotation distances
+I will use 1 snapshot every 1 snapshots
+I will superimpose all structures on the first one
+I will print entropy only for the first 20 neighbours
+I will superimpose all structures on the first one
+I will NOT be verbose
+########################################################
+
+2 atoms read
+4 atoms read
+8 atoms read
+16 atoms read
+32 atoms read
+64 atoms read
+128 atoms read
+256 atoms read
+512 atoms read
+1024 atoms read
+2048 atoms read
+4096 atoms read
+8192 atoms read
+16384 atoms read
+32768 atoms read
+65536 atoms read
+atoms stored...
+########################################################
+# SYSTEM:                                              #
+########################################################
+
+atoms =     3524, residues =      231, chains =        2, segments =        1
+
+########################################################
+
+atoms sorted ...
+N. residui: 231 -- N. atomi: 3524
+N. models: 25
+Using the first 50% of trajectory
+
+XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+
+Trans/Rot entropy estimate on weighted linear regression on first 20 nearest neighbours:
+    -16.66 +/-   0.089626 R units
+
+XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+
+XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+
+Trans entropy estimate on weighted linear regression on first 20 nearest neighbours:
+     -7.24 +/-   0.099812 R units
+
+XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+
+XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+
+
+XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+
+Rot entropy estimate on weighted linear regression on first 20 nearest neighbours:
+    -12.26 +/-   0.123027 R units
+
+XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+
+########################################################
+
+########################################################
+# ACCORDING TO YOUR PARAMETER CHOICES:                 #
+########################################################
+
+pdb file: sample.pdb
+out file: sample.out
+I will use 8 threads
+To avoid zeros in the distances I assume 1.000000e-10 Angstrom minimum distance
+I will use length  1.00000 to mix translation and rotation distances
+I will use 1 snapshot every 1 snapshots
+I will superimpose all structures on the first one
+I will print entropy only for the first 20 neighbours
+I will superimpose all structures on the first one
+I will NOT be verbose
+########################################################
+
+2 atoms read
+4 atoms read
+8 atoms read
+16 atoms read
+32 atoms read
+64 atoms read
+128 atoms read
+256 atoms read
+512 atoms read
+1024 atoms read
+2048 atoms read
+4096 atoms read
+8192 atoms read
+16384 atoms read
+32768 atoms read
+65536 atoms read
+atoms stored...
+########################################################
+# SYSTEM:                                              #
+########################################################
+
+atoms =     3524, residues =      231, chains =        2, segments =        1
+
+########################################################
+
+atoms sorted ...
+N. residui: 231 -- N. atomi: 3524
+N. models: 30
+Using the first 60% of trajectory
+
+XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+
+Trans/Rot entropy estimate on weighted linear regression on first 20 nearest neighbours:
+    -16.55 +/-   0.087397 R units
+
+XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+
+XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+
+Trans entropy estimate on weighted linear regression on first 20 nearest neighbours:
+     -7.03 +/-   0.078447 R units
+
+XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+
+XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+
+
+XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+
+Rot entropy estimate on weighted linear regression on first 20 nearest neighbours:
+    -11.51 +/-   0.047981 R units
+
+XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+
+########################################################
+
+########################################################
+# ACCORDING TO YOUR PARAMETER CHOICES:                 #
+########################################################
+
+pdb file: sample.pdb
+out file: sample.out
+I will use 8 threads
+To avoid zeros in the distances I assume 1.000000e-10 Angstrom minimum distance
+I will use length  1.00000 to mix translation and rotation distances
+I will use 1 snapshot every 1 snapshots
+I will superimpose all structures on the first one
+I will print entropy only for the first 20 neighbours
+I will superimpose all structures on the first one
+I will NOT be verbose
+########################################################
+
+2 atoms read
+4 atoms read
+8 atoms read
+16 atoms read
+32 atoms read
+64 atoms read
+128 atoms read
+256 atoms read
+512 atoms read
+1024 atoms read
+2048 atoms read
+4096 atoms read
+8192 atoms read
+16384 atoms read
+32768 atoms read
+65536 atoms read
+atoms stored...
+########################################################
+# SYSTEM:                                              #
+########################################################
+
+atoms =     3524, residues =      231, chains =        2, segments =        1
+
+########################################################
+
+atoms sorted ...
+N. residui: 231 -- N. atomi: 3524
+N. models: 35
+Using the first 70% of trajectory
+
+XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+
+Trans/Rot entropy estimate on weighted linear regression on first 20 nearest neighbours:
+    -15.98 +/-   0.101689 R units
+
+XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+
+XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+
+Trans entropy estimate on weighted linear regression on first 20 nearest neighbours:
+     -6.67 +/-   0.061547 R units
+
+XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+
+XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+
+
+XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+
+Rot entropy estimate on weighted linear regression on first 20 nearest neighbours:
+    -10.69 +/-   0.036923 R units
+
+XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+
+########################################################
+
+########################################################
+# ACCORDING TO YOUR PARAMETER CHOICES:                 #
+########################################################
+
+pdb file: sample.pdb
+out file: sample.out
+I will use 8 threads
+To avoid zeros in the distances I assume 1.000000e-10 Angstrom minimum distance
+I will use length  1.00000 to mix translation and rotation distances
+I will use 1 snapshot every 1 snapshots
+I will superimpose all structures on the first one
+I will print entropy only for the first 20 neighbours
+I will superimpose all structures on the first one
+I will NOT be verbose
+########################################################
+
+2 atoms read
+4 atoms read
+8 atoms read
+16 atoms read
+32 atoms read
+64 atoms read
+128 atoms read
+256 atoms read
+512 atoms read
+1024 atoms read
+2048 atoms read
+4096 atoms read
+8192 atoms read
+16384 atoms read
+32768 atoms read
+65536 atoms read
+131072 atoms read
+atoms stored...
+########################################################
+# SYSTEM:                                              #
+########################################################
+
+atoms =     3524, residues =      231, chains =        2, segments =        1
+
+########################################################
+
+atoms sorted ...
+N. residui: 231 -- N. atomi: 3524
+N. models: 40
+Using the first 80% of trajectory
+
+XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+
+Trans/Rot entropy estimate on weighted linear regression on first 20 nearest neighbours:
+    -16.19 +/-   0.106444 R units
+
+XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+
+XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+
+Trans entropy estimate on weighted linear regression on first 20 nearest neighbours:
+     -6.58 +/-   0.054632 R units
+
+XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+
+XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+
+
+XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+
+Rot entropy estimate on weighted linear regression on first 20 nearest neighbours:
+    -10.40 +/-   0.070814 R units
+
+XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+
+########################################################
+
+########################################################
+# ACCORDING TO YOUR PARAMETER CHOICES:                 #
+########################################################
+
+pdb file: sample.pdb
+out file: sample.out
+I will use 8 threads
+To avoid zeros in the distances I assume 1.000000e-10 Angstrom minimum distance
+I will use length  1.00000 to mix translation and rotation distances
+I will use 1 snapshot every 1 snapshots
+I will superimpose all structures on the first one
+I will print entropy only for the first 20 neighbours
+I will superimpose all structures on the first one
+I will NOT be verbose
+########################################################
+
+2 atoms read
+4 atoms read
+8 atoms read
+16 atoms read
+32 atoms read
+64 atoms read
+128 atoms read
+256 atoms read
+512 atoms read
+1024 atoms read
+2048 atoms read
+4096 atoms read
+8192 atoms read
+16384 atoms read
+32768 atoms read
+65536 atoms read
+131072 atoms read
+atoms stored...
+########################################################
+# SYSTEM:                                              #
+########################################################
+
+atoms =     3524, residues =      231, chains =        2, segments =        1
+
+########################################################
+
+atoms sorted ...
+N. residui: 231 -- N. atomi: 3524
+N. models: 45
+Using the first 90% of trajectory
+
+XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+
+Trans/Rot entropy estimate on weighted linear regression on first 20 nearest neighbours:
+    -16.25 +/-   0.082990 R units
+
+XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+
+XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+
+Trans entropy estimate on weighted linear regression on first 20 nearest neighbours:
+     -6.56 +/-   0.059162 R units
+
+XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+
+XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+
+
+XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+
+Rot entropy estimate on weighted linear regression on first 20 nearest neighbours:
+    -10.26 +/-   0.039145 R units
+
+XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+
+########################################################
+
+########################################################
+# ACCORDING TO YOUR PARAMETER CHOICES:                 #
+########################################################
+
+pdb file: sample.pdb
+out file: sample.out
+I will use 8 threads
+To avoid zeros in the distances I assume 1.000000e-10 Angstrom minimum distance
+I will use length  1.00000 to mix translation and rotation distances
+I will use 1 snapshot every 1 snapshots
+I will superimpose all structures on the first one
+I will print entropy only for the first 20 neighbours
+I will superimpose all structures on the first one
+I will NOT be verbose
+########################################################
+
+2 atoms read
+4 atoms read
+8 atoms read
+16 atoms read
+32 atoms read
+64 atoms read
+128 atoms read
+256 atoms read
+512 atoms read
+1024 atoms read
+2048 atoms read
+4096 atoms read
+8192 atoms read
+16384 atoms read
+32768 atoms read
+65536 atoms read
+131072 atoms read
+atoms stored...
+########################################################
+# SYSTEM:                                              #
+########################################################
+
+atoms =     3524, residues =      231, chains =        2, segments =        1
+
+########################################################
+
+atoms sorted ...
+N. residui: 231 -- N. atomi: 3524
+N. models: 51
+Using the first 100% of trajectory
+
+XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+
+Trans/Rot entropy estimate on weighted linear regression on first 20 nearest neighbours:
+    -15.95 +/-   0.084057 R units
+
+XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+
+XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+
+Trans entropy estimate on weighted linear regression on first 20 nearest neighbours:
+     -6.38 +/-   0.051583 R units
+
+XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+
+XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+
+
+XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+
+Rot entropy estimate on weighted linear regression on first 20 nearest neighbours:
+    -10.20 +/-   0.036588 R units
+
+XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX

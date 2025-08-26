@@ -1,0 +1,42 @@
+#!/bin/bash -f
+#Runs all resp files in a directory.
+#User should modify the following
+# Set these variables as well as fix the resp.in file before running.
+
+#GAUPREFIX="DGlcpa2NS6SOME_trainingTesting_2_q"
+#OUTPUTFILE="Ensemble_Charges.out"
+#ATOMS="25"
+
+GAUPREFIX="temp_table1_2_ligand_esp_g16"
+ATOMS=65
+
+#foreach LOG ('ls $GAUPREFIX*.log')
+for LOG in `ls $GAUPREFIX.log`; do
+        echo "Getting ESP charges on $LOG"
+        sed -n '/points will be used for fitting atomic charges/p' $LOG > count
+        /home/yao/GLYCAM_Dev_Env/V_2/Web_Data/TESTS/git-ignore-me/glycomimetics/moieties/charge_development/AUTOMATED_ENSEMBLE_AVERAGING/formatAtomNumEsp.pl 's/points will be used for fitting atomic charges//g' count
+        /home/yao/GLYCAM_Dev_Env/V_2/Web_Data/TESTS/git-ignore-me/glycomimetics/moieties/charge_development/AUTOMATED_ENSEMBLE_AVERAGING/formatAtomNumEsp.pl 's/  //g' count
+	echo "$ATOMS" >> count
+	gfortran ./readit.f >& /dev/null
+	grep "Atomic Center " $LOG > a
+	grep "ESP Fit" $LOG > b
+	grep "Fit    " $LOG > c
+	./a.out
+	rm -f a b c a.out readit.o
+	echo "Running Resp"
+	#/home/yao/GLYCAM_Dev_Env/V_2/Web_Data/TESTS/git-ignore-me/glycomimetics/moieties/charge_development/AUTOMATED_ENSEMBLE_AVERAGING/resp -O \
+	/home/yao/programs_src/q4md/RED-III.52-Tools-Files/resp-2.2/resp -O \
+		-i table1_2_resp.in \
+		-o $LOG.resp.out \
+		-p $LOG.resp.pch \
+		-e esp.dat \
+		-t $LOG.q.out
+	/bin/rm esp.dat count esout 
+done
+
+
+# Comment out the section below for Non-Averaged Charges
+#echo "Charges developed... Now averaging."
+#/home/wise/scripts/AUTOMATED_ENSEMBLE_AVERAGING/Average_RESP_Charges.pl $GAUPREFIX $OUTPUTFILE $ATOMS
+#echo "Charges averaged in the file: $OUTPUTFILE"
+

@@ -1,0 +1,1 @@
+Avg ΔH: -30.6769 kcal/mol. Stdev ΔH: 3.04407 kcal/mol Interaction entropy: 8.24375 kcal/mol at 298.15K Avg ΔG: -22.4332 kcal/mol

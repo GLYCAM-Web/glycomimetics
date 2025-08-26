@@ -1,0 +1,6 @@
+ComplexPdb:4ljh_chainA.pdbqt
+OpenValence:203_A_O1_HO1-moieties-O1_R.pdbqt
+Interval:30
+NumThreads:4
+OutputPath:output
+LogFile:sample.log

@@ -1,0 +1,30 @@
+Begin Entropy Calculation using the first 20% of the entire trajectory
+Total entropy estimate based on linear weighted regression:
+  -1149.54 +/-       3.26 R units       4.040 A (mean d 1st nn)
+
+Done Entropy Calculation using the first 20% of the entire trajectory
+
+Begin Entropy Calculation using the first 40% of the entire trajectory
+Total entropy estimate based on linear weighted regression:
+   -978.33 +/-       1.32 R units       2.588 A (mean d 1st nn)
+
+Done Entropy Calculation using the first 40% of the entire trajectory
+
+Begin Entropy Calculation using the first 60% of the entire trajectory
+Total entropy estimate based on linear weighted regression:
+   -947.15 +/-       1.12 R units       2.086 A (mean d 1st nn)
+
+Done Entropy Calculation using the first 60% of the entire trajectory
+
+Begin Entropy Calculation using the first 80% of the entire trajectory
+Total entropy estimate based on linear weighted regression:
+   -918.78 +/-       1.00 R units       1.821 A (mean d 1st nn)
+
+Done Entropy Calculation using the first 80% of the entire trajectory
+
+Begin Entropy Calculation using the first 100% of the entire trajectory
+Total entropy estimate based on linear weighted regression:
+   -894.74 +/-       0.84 R units       1.701 A (mean d 1st nn)
+
+Done Entropy Calculation using the first 100% of the entire trajectory
+

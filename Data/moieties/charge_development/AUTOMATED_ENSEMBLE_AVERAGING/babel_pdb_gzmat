@@ -1,0 +1,6 @@
+#!/bin/csh -f
+#This program executes babel g94 files to pdb files
+echo "Usage: script <file(s)_prefix>"
+foreach LOG (`ls $1*.pdb`)
+       /usr/local/programs/babel-1.6/babel -ipdb $LOG -ogzmat $LOG.com
+end
