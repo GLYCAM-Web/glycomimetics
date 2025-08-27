@@ -1,0 +1,26 @@
+Interfacing glycam and gaff
+MASS
+
+BOND
+Oh-ca  376.6    1.3696       SOURCE1_SOURCE5    6900	 0.0064    Borrowed from ca-os
+
+ANGLE
+Cg-Oh-ca    62.5      117.96      SOURCE4_SOURCE5         7354    1.4497    Borrowed from c3-os-ca
+Oh-ca-ca    69.6      119.20              SOURCE3           52    0.5240    Borrowed from ca-ca-os
+Oh-ca-ca    69.6      119.20              SOURCE3           52    0.5240    Borrowed from ca-ca-os
+
+DIHE
+Cg-Cg-Oh-ca   3    1.150         0.000           3.000      JCC,7,(1986),230    Borrowed from X -c3-os-X 
+Os-Cg-Oh-ca   3    1.150         0.000           3.000      JCC,7,(1986),230    Borrowed from X -c3-os-X 
+H2-Cg-Oh-ca   3    1.150         0.000           3.000      JCC,7,(1986),230    Borrowed from X -c3-os-X 
+Cg-Oh-ca-ca   2    1.800       180.000           2.000      same as X-ca-oh-X     Borrowed from X -ca-os-X 
+Cg-Oh-ca-ca   2    1.800       180.000           2.000      same as X-ca-oh-X     Borrowed from X -ca-os-X 
+Oh-ca-ca-ca   4   14.500       180.000           2.000      intrpol.bsd.on C6H6    Borrowed from X -ca-ca-X 
+Oh-ca-ca-ha   4   14.500       180.000           2.000      intrpol.bsd.on C6H6    Borrowed from X -ca-ca-X 
+Oh-ca-ca-cl   4   14.500       180.000           2.000      intrpol.bsd.on C6H6    Borrowed from X -ca-ca-X 
+Oh-ca-ca-ca   4   14.500       180.000           2.000      intrpol.bsd.on C6H6    Borrowed from X -ca-ca-X 
+
+IMPROPER
+
+NONBON
+

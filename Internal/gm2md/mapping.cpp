@@ -52,7 +52,7 @@ void BuildBondFromMol2(MolecularModeling::Assembly& ligand_pdb, std::vector<std:
         
         MolecularModeling::Atom* atom1 = all_atoms[atom1_index];
         MolecularModeling::Atom* atom2 = all_atoms[atom2_index];
-        std::cout << "Atom " << atom1->GetName() << " is bonded to: " << atom2->GetName() << std::endl;
+        //std::cout << "Atom " << atom1->GetName() << " is bonded to: " << atom2->GetName() << std::endl;
         //std::cout << "Atom " << bond_indices.first << "-" << atom1->GetName() << " is bonded to: " << bond_indices.second << "-" << atom2->GetName() << std::endl;
 
         atom1->GetNode()->AddNodeNeighbor(atom2);
@@ -543,7 +543,7 @@ void ChargeAdjustment(std::string molecule_net_charge_str, std::vector<mol2_atom
         total_bonding_glycam_atom_charge_difference += mapit->second;
     }
 
-    std::cout << "Total pertubation: " << total_bonding_glycam_atom_charge_difference << std::endl; 
+    //std::cout << "Total pertubation: " << total_bonding_glycam_atom_charge_difference << std::endl; 
 
     for (unsigned int i = 0; i < glycam_gaff_bonds.size(); i++){
 	std::pair<MolecularModeling::Atom*, MolecularModeling::Atom*>& bond = glycam_gaff_bonds[i];
@@ -555,7 +555,7 @@ void ChargeAdjustment(std::string molecule_net_charge_str, std::vector<mol2_atom
 
         MolecularModeling::Atom* gaff_atom = bond.second;
 	double gaff_atom_current_charge = gaff_atom->MolecularDynamicAtom::GetCharge();
-        std::cout << "Fraction for bond " << glycam_atom->GetName() << "-" << gaff_atom->GetName() << ": " << weight << " and adjustment per atom: " << adjustment_per_atom_this_bond << std::endl;
+        //std::cout << "Fraction for bond " << glycam_atom->GetName() << "-" << gaff_atom->GetName() << ": " << weight << " and adjustment per atom: " << adjustment_per_atom_this_bond << std::endl;
 
 	//glycam_atom->MolecularDynamicAtom::SetCharge(glycam_atom_current_charge + change_per_atom);
 	//gaff_atom->MolecularDynamicAtom::SetCharge(gaff_atom_current_charge + change_per_atom);
