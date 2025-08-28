@@ -9,5 +9,5 @@ cd Bin
 
 Step 3: Execute example case:
 cd Example 
-../Bin/gm.exe -f sample_input_file.txt
+./run_example.sh
 For Detailed explanation, check Example/README.md

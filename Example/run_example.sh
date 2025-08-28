@@ -1,4 +1,4 @@
-#../Bin/gm.exe -f sample_input_file.txt
+../Bin/gm.exe -f sample_input_file.txt
 
 cd output
 
