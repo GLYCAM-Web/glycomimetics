@@ -571,13 +571,13 @@ void GridsearchingForIndividualOpenValenceAtomAndMoiety(CoComplex* cocomplex, Op
 
     output_pdb_name << ".pdb";
 
-    /*PdbFileSpace::PdbFile* best_pdb = cocomplex->GetCoComplexAssembly()->BuildPdbFileStructureFromAssembly();
+    PdbFileSpace::PdbFile* best_pdb = cocomplex->GetCoComplexAssembly()->BuildPdbFileStructureFromAssembly();
     best_pdb->Write(output_pdb_name.str());
     std::cout << "Wrote pdb file " << output_pdb_name.str() << std::endl;
     gridsearch_log << "Wrote pdb file " << output_pdb_name.str() << std::endl;
 
     cocomplex->WriteDerivatizedLigandOffFile();
-    cocomplex->WriteDerivatizedLigandAndReceptorPdbFile(output_pdb_path, false, 0);*/
+    cocomplex->WriteDerivatizedLigandAndReceptorPdbFile(output_pdb_path, false, 0);
 
     open_valence->RemoveDerivativeMoiety();
 
